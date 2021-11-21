@@ -1551,24 +1551,24 @@ void DvbLinuxDevice::run()
 	Q_ASSERT((dvrFd >= 0) && (dvrPipe[0] >= 0) && (dvrBuffer.data != NULL));
 	pollfd pollFds[2];
 	memset(&pollFds, 0, sizeof(pollFds));
-	pollFds[0].fd = dvrPipe[0];
-	pollFds[0].events = POLLIN;
-	pollFds[1].fd = dvrFd;
-	pollFds[1].events = POLLIN;
+    pollFds[0].fd = dvrPipe[0];
+    pollFds[0].events = POLLIN;
+    pollFds[0].fd = dvrFd;
+    pollFds[0].events = POLLIN;
 
 	while (true) {
-		if (poll(pollFds, 2, -1) < 0) {
-			if (errno == EINTR) {
-				continue;
-			}
+        //if (poll(pollFds, 1, -1) < 0) {
+    //		if (errno == EINTR) {
+        //		continue;
+        //	}
 
-			qCWarning(logDev, "Poll failed with error: %d", errno);
-			return;
-		}
+            //qCWarning(logDev, "Poll failed with error: %d", errno);
+        //	return;
+        //}
 
-		if ((pollFds[0].revents & POLLIN) != 0) {
-			return;
-		}
+        //if ((pollFds[0].revents & POLLIN) != 0) {
+            //return;
+    //	}
 
 		while (true) {
 			int bufferSize = dvrBuffer.bufferSize;

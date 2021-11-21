@@ -107,7 +107,7 @@ bool DvbScanFilter::startFilter(int pid_, DvbScan::FilterType type_)
 
 	// FIXME check timings
 	if (type != DvbScan::NitFilter) {
-		timerId = startTimer(5000);
+		timerId = startTimer(10000);
 	} else {
 		timerId = startTimer(20000);
 	}
@@ -663,11 +663,14 @@ void DvbScan::deviceStateChanged()
 {
 	if (device->getDeviceState() == DvbDevice::DeviceReleased) {
 		qCWarning(logDvb, "Device was released. Stopping scan");
+        qDebug() << "Device was released. Stopping scan";
 		emit scanFinished();
 		return;
 	}
 
 	if (state == ScanTuning) {
+        qDebug() << "Device ScanTuning";
+
 		updateState();
 	}
 }
