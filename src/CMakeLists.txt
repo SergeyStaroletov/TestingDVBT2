@@ -20,7 +20,7 @@ set (UIS
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/omap/map)
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/plot)
 
 
 SET(CMAKE_AUTOUIC ON)
@@ -153,13 +153,15 @@ if(HAVE_DVB)
       dvbtest/omap/mapwidget/uavitem.cpp
       dvbtest/omap/mapwidget/trailitem.cpp
       dvbtest/omap/mapwidget/waypointitem.cpp
+      dvbtest/plot/qcustomplot.cpp
+      dvbtest/plot/qcustomplot.h
       )
 endif(HAVE_DVB)
 
 configure_file(config-kaffeine.h.cmake ${CMAKE_BINARY_DIR}/config-kaffeine.h)
 
 add_executable(kaffeine ${kaffeinedvb_SRCS} ${kaffeine_SRCS} ${UI_HEADERS} )
-target_link_libraries(kaffeine Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
+target_link_libraries(kaffeine Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
 		      KF5::KIOCore KF5::KIOFileWidgets KF5::WindowSystem
 		      KF5::DBusAddons ${X11_Xscreensaver_LIB} ${VLC_LIBRARY})
 
