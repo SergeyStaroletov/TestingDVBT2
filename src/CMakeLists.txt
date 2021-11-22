@@ -5,12 +5,23 @@ endif(Libdvbv5_FOUND)
 qt5_add_resources(RESOURCE_ADDED kaffeine.qrc dvbtest/omap/mapwidget/mapresources.qrc
 )
 
-set(MOC_HEADERS
-   testdialog.h)
+
+
+SET (CMAKE_AUTOMOC ON)
+
+
 
 set (UIS
-  testdialog.ui
+  dvbtest/testdialog.ui
+  dvbtest/omap/mapwidget/mapripform.ui
+  dvbtest/omap/map/QGCMapToolBar.ui
+  dvbtest/omap/map/QGCMapTool.ui
 )
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/omap/map)
+
+
 
 SET(CMAKE_AUTOUIC ON)
 
@@ -56,13 +67,40 @@ if(HAVE_DVB)
       dvb/dvbtab.cpp
       dvb/dvbtransponder.cpp
       dvb/xmltv.cpp
+      dvbtest/omap/internals/core.h
+      dvbtest/omap/internals/mousewheelzoomtype.h
+      dvbtest/omap/core/maptype.h
+      dvbtest/omap/core/accessmode.h
+      dvbtest/omap/core/tilecachequeue.h
+      dvbtest/omap/core/urlfactory.h
+      dvbtest/omap/core/languagetype.h
+      dvbtest/omap/core/geodecoderstatus.h
+      dvbtest/omap/map/QGCMapWidget.h
+      dvbtest/omap/map/QGCMapToolBar.h
+      dvbtest/omap/map/QGCMapTool.h
+      dvbtest/omap/mapwidget/mapgraphicitem.h
+      dvbtest/omap/mapwidget/Waypoint.h
+      dvbtest/omap/mapwidget/graphicsitem.h
+      dvbtest/omap/mapwidget/uavitem.h
+      dvbtest/omap/mapwidget/uavtrailtype.h
+      dvbtest/omap/mapwidget/traillineitem.h
+      dvbtest/omap/mapwidget/mapripform.h
+      dvbtest/omap/mapwidget/opmapwidget.h
+      dvbtest/omap/mapwidget/trailitem.h
+      dvbtest/omap/mapwidget/gpsitem.h
+      dvbtest/omap/mapwidget/uavmapfollowtype.h
+      dvbtest/omap/mapwidget/homeitem.h
+      dvbtest/omap/mapwidget/waypointlineitem.h
+      dvbtest/omap/mapwidget/mapripper.h
+      dvbtest/omap/mapwidget/waypointitem.h
+      dvbtest/testdialog.h
       dvbtest/testdialog.cpp
       dvbtest/testdialog.ui
-      dvbtest/omap/core/
       dvbtest/omap/core/opmaps.cpp
       dvbtest/omap/core/providerstrings.cpp
       dvbtest/omap/core/rawtile.cpp
       dvbtest/omap/core/urlfactory.cpp
+      dvbtest/omap/core/accessmode.cpp
       dvbtest/omap/core/alllayersoftype.cpp
       dvbtest/omap/core/languagetype.cpp
       dvbtest/omap/core/diagnostics.cpp
@@ -71,12 +109,14 @@ if(HAVE_DVB)
       dvbtest/omap/core/size.cpp
       dvbtest/omap/core/cache.cpp
       dvbtest/omap/core/memorycache.cpp
+      dvbtest/omap/core/maptype.cpp
       dvbtest/omap/core/point.cpp
+      dvbtest/omap/core/geodecoderstatus.cpp
       dvbtest/omap/core/pureimage.cpp
       dvbtest/omap/core/tilecachequeue.cpp
       dvbtest/omap/core/cacheitemqueue.cpp
       dvbtest/omap/core/kibertilecache.cpp
-      dvbtest/omap/internals/MouseWheelZoomType.cpp
+      dvbtest/omap/internals/mousezoom.cpp
       dvbtest/omap/internals/rectlatlng.cpp
       dvbtest/omap/internals/tilematrix.cpp
       dvbtest/omap/internals/core.cpp
@@ -98,7 +138,7 @@ if(HAVE_DVB)
       dvbtest/omap/map/Waypoint2DIcon.cc
       dvbtest/omap/map/QGCMapTool.cc
       dvbtest/omap/map/QGCMapTool.ui
-      dvbtest/omap/mapwidget/
+      dvbtest/omap/mapwidget/graphicsitem.cpp
       dvbtest/omap/mapwidget/configuration.cpp
       dvbtest/omap/mapwidget/homeitem.cpp
       dvbtest/omap/mapwidget/mapripform.cpp
@@ -119,7 +159,7 @@ endif(HAVE_DVB)
 configure_file(config-kaffeine.h.cmake ${CMAKE_BINARY_DIR}/config-kaffeine.h)
 
 add_executable(kaffeine ${kaffeinedvb_SRCS} ${kaffeine_SRCS} ${UI_HEADERS} )
-target_link_libraries(kaffeine Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
+target_link_libraries(kaffeine Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
 		      KF5::KIOCore KF5::KIOFileWidgets KF5::WindowSystem
 		      KF5::DBusAddons ${X11_Xscreensaver_LIB} ${VLC_LIBRARY})
 

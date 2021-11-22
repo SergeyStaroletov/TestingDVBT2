@@ -37,6 +37,7 @@ namespace core {
         Q_OBJECT
         Q_ENUMS(Types)
     public:
+        virtual ~GeoCoderStatusCode();
                 enum Types
         {
             /// <summary>

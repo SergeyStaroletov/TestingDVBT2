@@ -38,7 +38,7 @@ This file is part of the PIXHAWK project
 #include <QTextStream>
 //#include "QGCMAVLink.h"
 //#include "QGC.h"
-#include "common.h"
+#include "dvbtest/omap/common.h"
 
 class Waypoint : public QObject
 {

@@ -27,8 +27,11 @@
 #include "homeitem.h"
 #include "mapgraphicitem.h"
 #include "opmapwidget.h"
+#include "graphicsitem.h"
+
 namespace mapcontrol
 {
+
     HomeItem::HomeItem(MapGraphicItem* map,OPMapWidget* parent) :
         GraphicsItem(map, parent),
         safe(true), showsafearea(true), safearea(1000),

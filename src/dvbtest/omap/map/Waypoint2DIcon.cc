@@ -1,6 +1,6 @@
 #include "Waypoint2DIcon.h"
 //#include "logging.h"
-#include "opmapcontrol.h"
+#include "dvbtest/omap/mapwidget/opmapcontrol.h"
 //#include "QGC.h"
 #include <QPainter>
 

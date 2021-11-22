@@ -44,13 +44,13 @@ namespace mapcontrol
     class GraphicsItem : public QObject, public QGraphicsItem
     {
         Q_OBJECT
-        Q_INTERFACES(QGraphicsItem)
+        //Q_INTERFACES(QGraphicsItem)
     public:
         GraphicsItem(MapGraphicItem* map, OPMapWidget* parent)
             : map(map), mapwidget(parent)
         {}
 
-        virtual ~GraphicsItem() {}
+        virtual ~GraphicsItem() = 0;
 
         virtual void RefreshPos() = 0;
     protected:

@@ -437,7 +437,8 @@ QVector <double> LKS94Projection::MTD11(QVector <double>& p)
             break;
 
         if(i >= max_iter)
-            throw  "Latitude failed to converge";
+            break;
+            //throw  "Latitude failed to converge";
     }
 
     if(fabs(phi) < HALF_PI)

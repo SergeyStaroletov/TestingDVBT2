@@ -36,7 +36,8 @@ namespace core {
         Q_OBJECT
         Q_ENUMS(Types)
     public:
-                enum Types
+        virtual ~MapType();
+        enum Types
         {
             GoogleMap=1,
             GoogleSatellite=4,

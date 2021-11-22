@@ -3,7 +3,7 @@
 
 #include <QMap>
 #include <QTimer>
-#include "mapwidget/opmapcontrol.h"
+#include "dvbtest/omap/mapwidget/opmapcontrol.h"
 
 class UASInterface;
 class UASWaypointManager;

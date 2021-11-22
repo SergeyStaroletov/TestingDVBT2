@@ -3,8 +3,8 @@
 
 #include <QGraphicsItem>
 
-#include "Waypoint.h"
-#include "opmapcontrol.h"
+#include "dvbtest/omap/mapwidget/Waypoint.h"
+#include "dvbtest/omap/mapwidget/opmapcontrol.h"
 
 class Waypoint2DIcon : public mapcontrol::WayPointItem
 {

@@ -50,6 +50,9 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Widgets # QApplication
 	Network
 	Sql
+        Gui
+        OpenGL
+        Svg
 	X11Extras
 )
 

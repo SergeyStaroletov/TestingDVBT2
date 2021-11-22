@@ -38,6 +38,7 @@ namespace core {
         Q_OBJECT
         Q_ENUMS(Types)
     public:
+        virtual ~AccessMode();
         enum Types
         {
             /// <summary>

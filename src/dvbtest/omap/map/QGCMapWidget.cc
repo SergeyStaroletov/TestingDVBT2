@@ -9,7 +9,7 @@
 //#include "ArduPilotMegaMAV.h"
 //#include "WaypointNavigation.h"
 #include <QInputDialog>
-#include <homeitem.h>
+#include <dvbtest/omap/mapwidget/homeitem.h>
 
 std::vector<mapcontrol::UAVItem *> my_points;
 
