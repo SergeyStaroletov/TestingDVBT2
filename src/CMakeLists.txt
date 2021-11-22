@@ -9,7 +9,8 @@ qt5_add_resources(RESOURCE_ADDED kaffeine.qrc dvbtest/omap/mapwidget/mapresource
 
 SET (CMAKE_AUTOMOC ON)
 
-
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED TRUE)
 
 set (UIS
   dvbtest/testdialog.ui
@@ -18,9 +19,14 @@ set (UIS
   dvbtest/omap/map/QGCMapTool.ui
 )
 
+link_directories("/usr/lib/x86_64-linux-gnu")
+include_directories("/usr/include/libusb-1.0")
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/omap/map)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/plot)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/rtl_sdr/include)
+
 
 
 SET(CMAKE_AUTOUIC ON)
@@ -155,13 +161,23 @@ if(HAVE_DVB)
       dvbtest/omap/mapwidget/waypointitem.cpp
       dvbtest/plot/qcustomplot.cpp
       dvbtest/plot/qcustomplot.h
+      dvbtest/rtl_sdr/rtl_sdr.c
+      dvbtest/rtl_sdr/rtlsdr_static_export.h
+      dvbtest/rtl_sdr/tuner_fc0012.c
+      dvbtest/rtl_sdr/tuner_fc2580.c
+      dvbtest/rtl_sdr/librtlsdr.c
+      dvbtest/rtl_sdr/rtlsdr_export.h
+      dvbtest/rtl_sdr/tuner_e4k.c
+      dvbtest/rtl_sdr/tuner_fc0013.c
+      dvbtest/rtl_sdr/tuner_r82xx.c
+      dvbtest/rtl_sdr/convenience/convenience.c
       )
 endif(HAVE_DVB)
 
 configure_file(config-kaffeine.h.cmake ${CMAKE_BINARY_DIR}/config-kaffeine.h)
 
 add_executable(kaffeine ${kaffeinedvb_SRCS} ${kaffeine_SRCS} ${UI_HEADERS} )
-target_link_libraries(kaffeine Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
+target_link_libraries(kaffeine usb-1.0 Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
 		      KF5::KIOCore KF5::KIOFileWidgets KF5::WindowSystem
 		      KF5::DBusAddons ${X11_Xscreensaver_LIB} ${VLC_LIBRARY})
 

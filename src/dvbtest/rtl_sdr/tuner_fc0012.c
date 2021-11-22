@@ -133,7 +133,7 @@ int fc0012_init(void *dev)
 #endif
 	reg[0x07] |= 0x20;
 
-//	if (priv->dual_master)
+/*	if (priv->dual_master)*/
 	reg[0x0c] |= 0x02;
 
 	for (i = 1; i < sizeof(reg); i++) {
@@ -278,7 +278,7 @@ int fc0012_set_params(void *dev, uint32_t freq, uint32_t bandwidth)
 		ret = fc0012_writereg(dev, 0x0e, 0x00);
 
 	if (!ret) {
-//		msleep(10);
+/*		msleep(10);*/
 		ret = fc0012_readreg(dev, 0x0e, &tmp);
 	}
 	if (ret)

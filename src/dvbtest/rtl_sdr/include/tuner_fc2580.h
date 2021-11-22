@@ -1,8 +1,8 @@
 #ifndef __TUNER_FC2580_H
 #define __TUNER_FC2580_H
 
-#define	BORDER_FREQ	2600000	//2.6GHz : The border frequency which determines whether Low VCO or High VCO is used
-#define USE_EXT_CLK	0	//0 : Use internal XTAL Oscillator / 1 : Use External Clock input
+#define	BORDER_FREQ	2600000
+#define USE_EXT_CLK	0
 #define OFS_RSSI 57
 
 #define FC2580_I2C_ADDR		0xac
@@ -85,10 +85,10 @@ fc2580_fci_result_type fc2580_set_freq(void *pTuner, unsigned int f_lo, unsigned
 ==============================================================================*/
 fc2580_fci_result_type fc2580_set_filter( void *pTuner, unsigned char filter_bw, unsigned int freq_xtal );
 
-// The following context is FC2580 tuner API source code
-// Definitions
+/* The following context is FC2580 tuner API source code
+ Definitions
 
-// AGC mode
+ AGC mode*/
 enum FC2580_AGC_MODE
 {
 	FC2580_AGC_INTERNAL = 1,
@@ -96,7 +96,7 @@ enum FC2580_AGC_MODE
 };
 
 
-// Bandwidth mode
+/* Bandwidth mode */
 enum FC2580_BANDWIDTH_MODE
 {
 	FC2580_BANDWIDTH_1530000HZ = 1,
@@ -105,7 +105,7 @@ enum FC2580_BANDWIDTH_MODE
 	FC2580_BANDWIDTH_8000000HZ = 8,
 };
 
-// Manipulaing functions
+/* Manipulaing functions */
 int
 fc2580_Initialize(
 	void *pTuner
@@ -117,7 +117,7 @@ fc2580_SetRfFreqHz(
 	unsigned long RfFreqHz
 	);
 
-// Extra manipulaing functions
+/* Extra manipulaing functions */
 int
 fc2580_SetBandwidthMode(
 	void *pTuner,
