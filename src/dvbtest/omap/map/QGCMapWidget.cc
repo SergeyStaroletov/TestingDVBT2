@@ -255,24 +255,65 @@ void QGCMapWidget::showEvent(QShowEvent* event)
         mapInitialized = true;
         //QTimer::singleShot(800, this, SLOT(loadSettings()));
 
-        mapcontrol::UAVItem *it = new mapcontrol::UAVItem(map, this,
-                                                          QString::fromUtf8(":/markers/images/home2.svg"));
+
+        //load CSV data
+
+        struct measure {
+           QString dateStr;
+           double lat;
+           double lon;
+           bool is_locked;
+           double sig;
+           double snr;
+        };
+
+        std::vector<measure> pointz;
+
+        FILE * f = fopen("/home/sergey/dvb_drive.csv","r");
+        double max_snr = -1;
+        double min_snr = 65535;
+
+        while (!feof(f)) {
+            char buf[200];
+            memset(buf, 0, sizeof(buf));
+            fgets(buf,200,f);
+            QString b = QString::fromLocal8Bit(buf);
+            QStringList lst = b.split(";");
+            if (lst.size() < 6) continue;
+            QString dateStr = lst[0];
+            QString lat = lst[1];
+            QString lon = lst[2];
+            QString lock = lst[3];
+            QString sig = lst[4];
+            QString snr = lst[5];
+            measure m;
+            m.dateStr = dateStr;
+            m.lat = 1.0 * lat.toInt() / 10000000;
+            m.lon = 1.0 * lon.toInt() / 10000000;
+            m.is_locked = (bool)(lock.toInt());
+            m.sig = sig.replace(",",".").toDouble();
+            m.snr = snr.replace(",",".").toDouble();
+            if (m.snr > max_snr) max_snr = m.snr;
+            if (m.snr < min_snr) min_snr = m.snr;
+            pointz.push_back(m);
+        }
+        fclose(f);
+
         internals::PointLatLng pos;
-        pos.SetLat(53);
-        pos.SetLng(83);
-        it->SetUAVPos(pos,0);//, QColor::fromRgb(0,0,255));
-        it->setActive(false);
-        my_points.push_back(it);
-
-
-        it = new mapcontrol::UAVItem(map, this);
-        pos.SetLat(63);
-        pos.SetLng(83);
-        it->SetUAVPos(pos,0, QColor::fromRgb(255,0,255));
-        it->setActive(false);
-        my_points.push_back(it);
-
-
+        for (measure p: pointz) {
+            mapcontrol::UAVItem *it = new mapcontrol::UAVItem(map, this);
+            pos.SetLat(p.lat);
+            pos.SetLng(p.lon);
+            if (! p.is_locked)
+                it->SetUAVPos(pos,0, QColor::fromRgb(255, 0, 0));
+             else
+            {
+                int grad = 255 - (p.snr - min_snr) / (max_snr - min_snr) * 255;
+                it->SetUAVPos(pos,0, QColor::fromRgb(grad, 255, 0));
+            }
+            it->setActive(false);
+            my_points.push_back(it);
+        }
     }
     SetCurrentPosition(pos_lat_lon);         // set the map position
     setFocus();
@@ -516,11 +557,9 @@ bool QGCMapWidget::isValidGpsLocation(UASInterface* system) const
 void QGCMapWidget::updateGlobalPosition()
 {
 
-    internals::PointLatLng pos;
-    pos.SetLat(53);
-    pos.SetLng(83);
-    //my_points.at(0)->SetUAVPos(pos, 0, QColor::fromRgb(0,0,255));
-    my_points.at(0)->RefreshPos();
+    for (auto p: my_points) {
+        p->RefreshPos();
+    }
 
     /*
     QList<UASInterface*> systems = UASManager::instance()->getUASList();

@@ -19,6 +19,10 @@ public:
 private slots:
     void on_pushButton_clicked();
 
+    void on_pushButtonAnalize_clicked();
+
+    void on_pushButtonStopAnalize_clicked();
+
 private:
     Ui::TestDialog *ui;
     DvbManager *manager;
