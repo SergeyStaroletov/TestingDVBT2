@@ -26,8 +26,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/omap/map)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/plot)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/rtl_sdr/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/dvbtest/glwidget)
 
 
+cmake_policy(SET CMP0072 NEW)
 
 SET(CMAKE_AUTOUIC ON)
 
@@ -171,13 +173,21 @@ if(HAVE_DVB)
       dvbtest/rtl_sdr/tuner_fc0013.c
       dvbtest/rtl_sdr/tuner_r82xx.c
       dvbtest/rtl_sdr/convenience/convenience.c
+      dvbtest/glwidget/glwidget.cpp
+      dvbtest/glwidget/glwidget.h
+      dvbtest/glwidget/window.cpp
+      dvbtest/glwidget/window.h
+      dvbtest/glwidget/logo.cpp
+      dvbtest/glwidget/logo.h
       )
 endif(HAVE_DVB)
 
 configure_file(config-kaffeine.h.cmake ${CMAKE_BINARY_DIR}/config-kaffeine.h)
 
+find_package(OpenGL REQUIRED)
+
 add_executable(kaffeine ${kaffeinedvb_SRCS} ${kaffeine_SRCS} ${UI_HEADERS} )
-target_link_libraries(kaffeine usb-1.0 Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
+target_link_libraries(kaffeine usb-1.0 OpenGL::OpenGL Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
 		      KF5::KIOCore KF5::KIOFileWidgets KF5::WindowSystem
 		      KF5::DBusAddons ${X11_Xscreensaver_LIB} ${VLC_LIBRARY})
 

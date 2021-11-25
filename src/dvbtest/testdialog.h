@@ -23,6 +23,8 @@ private slots:
 
     void on_pushButtonStopAnalize_clicked();
 
+    void on_checkBoxGroupNearest_stateChanged(int arg1);
+
 private:
     Ui::TestDialog *ui;
     DvbManager *manager;

@@ -11,8 +11,11 @@
 #include "qcustomplot.h"
 #include <iostream>
 #include <stdio.h>
+#include "window.h"
 
 static bool stoppedAnalize = false;
+
+bool is_group;
 
 class ScanThread:public QThread {
 public:
@@ -67,6 +70,12 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager) :
     fclose(f);
 
 
+    //opengl widget
+    //QRect sz = ui->widgetView->contentsRect();
+    //ui->widgetView=new Window(this->window());
+
+    QGridLayout *layout = new QGridLayout(ui->widgetView);
+    layout->addWidget(new Window(ui->widgetView));
 
 
 
@@ -226,6 +235,42 @@ void TestDialog::on_pushButtonAnalize_clicked()
     int f2 = (int)(ui->lineEditTo->text().toFloat() * mille);
     int step = ui->comboBoxStep->itemText(ui->comboBoxStep->currentIndex()).toInt() * mille;
 
+
+    FILE * f = fopen("/home/sergey/sig.txt","r");
+
+    QTableWidget *table = ui->tablePoints;
+
+    std::vector <int> freqs;
+    std::vector <double> sigs;
+
+    double maxs= -1;
+    double mins= 32768;
+
+    int r = 0;
+    while (!feof(f)) {
+        char buf[200];
+        memset(buf, 0, sizeof(buf));
+        fgets(buf,200,f);
+        QString b = QString::fromLocal8Bit(buf);
+        QStringList lst = b.split(";");
+        if (lst.size() < 3) continue;
+        QString freq = lst[0];
+        QString sig = lst[1];
+        sig = sig.replace(",",".");
+        int fr = freq.toInt();
+        double sigg = sig.toDouble();
+        if (sigg > maxs) maxs = sigg;
+        if (sigg < mins) mins = sigg;
+        freqs.push_back(fr);
+        sigs.push_back(sigg);
+        r++;
+    }
+    fclose(f);
+
+
+
+
+
     /* prepare the graph */
 
     QCustomPlot *customPlot = ui->plot;
@@ -236,10 +281,10 @@ void TestDialog::on_pushButtonAnalize_clicked()
     srand(8); // set the random seed, so we always get the same random data
 
     // configure left axis text labels:
-    QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-    textTicker->addTick(10, "a bit\nlow");
-    textTicker->addTick(50, "quite\nhigh");
-    customPlot->yAxis->setTicker(textTicker);
+    //QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
+    //textTicker->addTick(10, "a bit\nlow");
+    //textTicker->addTick(50, "quite\nhigh");
+    //customPlot->yAxis->setTicker(textTicker);
     // set a more compact font size for bottom and left axis tick labels:
     customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
     customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
@@ -255,7 +300,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
     customPlot->yAxis2->setTickLabels(false);
     // set axis ranges to show all data:
     customPlot->xAxis->setRange(f1 / mille, f2 / mille);
-    customPlot->yAxis->setRange(0, 0.005);
+    customPlot->yAxis->setRange(mins, maxs);
     // show legend with slightly transparent background brush:
     customPlot->legend->setVisible(true);
     customPlot->legend->setBrush(QColor(255, 255, 255, 150));
@@ -343,34 +388,39 @@ void TestDialog::on_pushButtonAnalize_clicked()
 
   //for (int f = 500000000; f < 600000000;f+=1000000) {
 
-  for (int f = f1; f <= f2; f += step) {
+
+  for (int f : freqs) {
+
+  //for (int f = f1; f <= f2; f += step) {
 
       if (stoppedAnalize) break;
 
 
-      t->frequency = f;//522000000;
+      t->frequency = f * mille;//522000000;
       transpRepr = transponder.fromString(t->toString());
-
-
       device->getProps(transpRepr);
 
 
       /* obtain the signal data */
-      float sig = device->getSignal(s);
-      float sig2 = 1 / sig;
-      float snr = device->getSnr(s);
-      float fMhz = f / mille;
+      //float sig = device->getSignal(s);
+      //float sig2 = 1 / sig;
+      //float snr = device->getSnr(s);
 
-      signalData[i].key = fMhz;
+
+      double sig2 = sigs.at(i);
+      //float fMhz = f / mille;
+
+      signalData[i].key = f;
       signalData[i].value = sig2;
 
       /* do plotting */
       customPlot->graph()->data()->set(signalData);
       ui->plot->replot();
 
-      qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
+      //qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
 
        QApplication::processEvents();
+       QThread::currentThread()->msleep(100);
 
        i++;
    }
@@ -411,4 +461,10 @@ void TestDialog::on_pushButtonAnalize_clicked()
 void TestDialog::on_pushButtonStopAnalize_clicked()
 {
     stoppedAnalize = true;
+}
+
+void TestDialog::on_checkBoxGroupNearest_stateChanged(int arg1)
+{
+    is_group = !is_group;
+    ui->widgetView->repaint();
 }
