@@ -50,6 +50,11 @@
 #include "dvb/dvbtab.h"
 #include "mainwindow.h"
 #include "playlist/playlisttab.h"
+#include "dvb/dvbconfigdialog.h"
+#include <dvb/dvbmanager.h>
+#include <dvb/dvbscandialog.h>
+
+#include <dvbtest/testdialog.h>
 
 // log categories. Should match log.h
 
@@ -406,6 +411,21 @@ void MainWindow::run()
 
 	parseArgs();
 	show();
+
+    DvbManager *manager = dvbTab->getManager();
+
+    QDialog *d = new TestDialog(this, manager);
+
+    d->setModal(true);
+    d->show();
+
+    /*DvbManager *manager = dvbTab->getManager();
+
+    QDialog *dialog = new DvbScanDialog(manager, dvbTab);
+    dialog->setAttribute(Qt::WA_DeleteOnClose, dvbTab);
+    dialog->setModal(true);
+    dialog->show();*/
+
 }
 
 MainWindow::~MainWindow()
