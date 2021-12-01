@@ -20,6 +20,8 @@ set (UIS
 )
 
 link_directories("/usr/lib/x86_64-linux-gnu")
+link_directories("/usr/lib/aarch64-linux-gnu")
+
 include_directories("/usr/include/libusb-1.0")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -187,7 +189,7 @@ configure_file(config-kaffeine.h.cmake ${CMAKE_BINARY_DIR}/config-kaffeine.h)
 find_package(OpenGL REQUIRED)
 
 add_executable(kaffeine ${kaffeinedvb_SRCS} ${kaffeine_SRCS} ${UI_HEADERS} )
-target_link_libraries(kaffeine usb-1.0 OpenGL::OpenGL Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
+target_link_libraries(kaffeine usb-1.0 GL Qt5::Widgets Qt5::Sql Qt5::Network Qt5OpenGL Qt5Svg Qt5PrintSupport Qt5::X11Extras KF5::XmlGui KF5::I18n KF5::Solid
 		      KF5::KIOCore KF5::KIOFileWidgets KF5::WindowSystem
 		      KF5::DBusAddons ${X11_Xscreensaver_LIB} ${VLC_LIBRARY})
 

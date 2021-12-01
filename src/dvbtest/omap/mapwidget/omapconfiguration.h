@@ -25,8 +25,8 @@
 * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#ifndef CONFIGURATION_H
-#define CONFIGURATION_H
+#ifndef CONFIGURATION1_H
+#define CONFIGURATION1_H
 
 #include <QBrush>
 #include <QPen>
@@ -154,7 +154,6 @@ public:
     void SetCacheLocation(QString const& dir)
     {
         core::Cache::Instance()->setCacheLocation(dir);
-
     }
 
     /**

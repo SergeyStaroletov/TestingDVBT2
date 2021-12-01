@@ -171,7 +171,7 @@ namespace mapcontrol
         * @param config pointer to configuration classed to be used
         * @return
         */
-        OPMapWidget(QWidget *parent=0,Configuration *config=new Configuration);
+        OPMapWidget(QWidget *parent=0,Configuration *config=new Configuration());
         ~OPMapWidget();
 
         /**
