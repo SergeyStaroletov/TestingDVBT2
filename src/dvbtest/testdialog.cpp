@@ -30,6 +30,7 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
     : QDialog(parent), ui(new Ui::TestDialog) {
   ui->setupUi(this);
   this->manager = manager;
+  this->num_graphs = -1;
 
   // oooops
 
@@ -221,17 +222,6 @@ void TestDialog::on_pushButton_clicked() {
 
 void TestDialog::on_pushButtonAnalize_clicked() {
 
-  int mille = 1000000;
-  int f1 = (int)(ui->lineEditFrom->text().toFloat() * mille);
-  int f2 = (int)(ui->lineEditTo->text().toFloat() * mille);
-  int step =
-      ui->comboBoxStep->itemText(ui->comboBoxStep->currentIndex()).toInt() *
-      mille;
-
-  FILE *f = fopen("/home/sergey/sig.txt", "r");
-
-  QTableWidget *table = ui->tablePoints;
-
   std::vector<int> freqs;
   std::vector<double> sigs;
 
@@ -239,6 +229,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
   double mins = 32768;
 
   int r = 0;
+  FILE *f = fopen("/home/sergey/sig.txt", "r");
   while (!feof(f)) {
     char buf[200];
     memset(buf, 0, sizeof(buf));
@@ -262,160 +253,167 @@ void TestDialog::on_pushButtonAnalize_clicked() {
   }
   fclose(f);
 
-  /* prepare the graph */
+  const int mille = 1000000;
 
-  QCustomPlot *customPlot = ui->plot;
-  customPlot->clearGraphs();
-  customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+  do {
 
-  double now = QDateTime::currentDateTime().toMSecsSinceEpoch() / 1000.0;
-  srand(8); // set the random seed, so we always get the same random data
+    int f1 = (int)(ui->lineEditFrom->text().toFloat() * mille);
+    int f2 = (int)(ui->lineEditTo->text().toFloat() * mille);
+    int step =
+        ui->comboBoxStep->itemText(ui->comboBoxStep->currentIndex()).toInt() *
+        mille;
 
-  // configure left axis text labels:
-  // QSharedPointer<QCPAxisTickerText> textTicker(new QCPAxisTickerText);
-  // textTicker->addTick(10, "a bit\nlow");
-  // textTicker->addTick(50, "quite\nhigh");
-  // customPlot->yAxis->setTicker(textTicker);
-  // set a more compact font size for bottom and left axis tick labels:
-  customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
-  customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
-  // set axis labels:
-  customPlot->xAxis->setLabel("Freq");
-  customPlot->yAxis->setLabel("Signal strength from DVB card");
-  // make top and right axes visible but without ticks and labels:
-  customPlot->xAxis2->setVisible(true);
-  customPlot->yAxis2->setVisible(true);
-  customPlot->xAxis2->setTicks(false);
-  customPlot->yAxis2->setTicks(false);
-  customPlot->xAxis2->setTickLabels(false);
-  customPlot->yAxis2->setTickLabels(false);
-  // set axis ranges to show all data:
-  customPlot->xAxis->setRange(f1 / mille, f2 / mille);
-  customPlot->yAxis->setRange(mins, maxs * 1.2);
-  // show legend with slightly transparent background brush:
-  customPlot->legend->setVisible(true);
-  customPlot->legend->setBrush(QColor(255, 255, 255, 150));
+    /* prepare the graph */
 
-  ui->plot->axisRect()->setupFullAxesBox(true);
-  ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    QCustomPlot *customPlot = ui->plot;
 
-  /* prepare the card and scan params */
+    // if we need to prepare a fresh graph
+    if (num_graphs == -1 || !ui->checkBoxAppend->isChecked()) {
+      customPlot->clearGraphs();
+      customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+      // set a more compact font size for bottom and left axis tick labels:
+      customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+      customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+      // set axis labels:
+      customPlot->xAxis->setLabel("Freq");
+      customPlot->yAxis->setLabel("Signal strength from DVB card");
+      // make top and right axes visible but without ticks and labels:
+      customPlot->xAxis2->setVisible(true);
+      customPlot->yAxis2->setVisible(true);
+      customPlot->xAxis2->setTicks(false);
+      customPlot->yAxis2->setTicks(false);
+      customPlot->xAxis2->setTickLabels(false);
+      customPlot->yAxis2->setTickLabels(false);
+      // set axis ranges to show all data:
+      customPlot->xAxis->setRange(f1 / mille, f2 / mille);
+      customPlot->yAxis->setRange(mins, maxs * 1.2);
+      // show legend with slightly transparent background brush:
+      customPlot->legend->setVisible(true);
+      customPlot->legend->setBrush(QColor(255, 255, 255, 150));
 
-  stoppedAnalize = false;
+      ui->plot->axisRect()->setupFullAxesBox(true);
+      ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+      num_graphs = 0;
+    } else
+      num_graphs++;
+    /* prepare the card and scan params */
 
-  if (manager->getDeviceConfigs().size() == 0)
-    return;
+    stoppedAnalize = false;
 
-  DvbDevice *device = manager->getDeviceConfigs().at(1).device;
-  device->getDeviceId();
-  const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
+    if (manager->getDeviceConfigs().size() == 0)
+      return;
 
-  DvbConfig cfg;
-  foreach (const DvbConfig &config, it.configs) {
-    if (config->name == "Terrestrial (T2)") {
-      device = it.device;
-      device->acquire(config.constData());
-      cfg = config;
-      qDebug() << config->name;
-      ui->labelCard->setText(device->getFrontendName());
-      break;
+    DvbDevice *device = manager->getDeviceConfigs().at(1).device;
+    device->getDeviceId();
+    const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
+
+    DvbConfig cfg;
+    foreach (const DvbConfig &config, it.configs) {
+      if (config->name == "Terrestrial (T2)") {
+        device = it.device;
+        device->acquire(config.constData());
+        cfg = config;
+        qDebug() << config->name;
+        ui->labelCard->setText(device->getFrontendName());
+        break;
+      }
     }
-  }
 
-  if (device == NULL) {
-    qDebug() << "No device!";
-    return;
-  }
+    if (device == NULL) {
+      qDebug() << "No device!";
+      return;
+    }
 
-  qDebug() << "dev: " << device->getDeviceId();
-  DvbBackendDevice::Scale s;
-  QString src = "Terrestrial (T2)";
+    qDebug() << "dev: " << device->getDeviceId();
+    DvbBackendDevice::Scale s;
+    QString src = "Terrestrial (T2)";
 
-  int countPoints = (f2 - f1 + 1) / step + 1;
+    int countPoints = (f2 - f1 + 1) / step + 1;
 
-  int gi = 0;
-  customPlot->addGraph();
-  QColor color(20 + 200 / 4.0 * gi, 70 * (1.6 - gi / 4.0), 150, 150);
-  customPlot->graph()->setLineStyle(QCPGraph::lsLine);
-  customPlot->graph()->setPen(QPen(color.lighter(200)));
-  customPlot->graph()->setBrush(QBrush(color));
+    if (num_graphs > 4) {
+      num_graphs = 0;
+      customPlot->clearGraphs();
+    }
 
-  QVector<QCPGraphData> signalData(countPoints);
+    // set different colors based on graph number from example
+    int gi = num_graphs;
+    customPlot->addGraph();
+    QColor color(20 + 200 / 4.0 * gi, 70 * (1.6 - gi / 4.0), 150, 150);
+    customPlot->graph()->setLineStyle(QCPGraph::lsLine);
+    customPlot->graph()->setPen(QPen(color.lighter(200)));
+    customPlot->graph()->setBrush(QBrush(color));
+    customPlot->graph()->setName(
+        QDateTime::currentDateTime().toString("hh:mm:ss"));
 
-  int i = 0;
+    QVector<QCPGraphData> signalData(countPoints);
 
-  /*DvbT2Transponder *transp = new DvbT2Transponder();
-  memset(transp, 0, sizeof(DvbT2Transponder));
-  transp->bandwidth = DvbT2Transponder::Bandwidth8MHz;
-  transp->frequency = 522000000;
-  transp->modulation = DvbT2Transponder::ModulationAuto;
-  transp->fecRateHigh = DvbT2Transponder::FecAuto;
-  transp->fecRateLow = DvbT2Transponder::FecNone;
-  transp->guardInterval = DvbT2Transponder::GuardIntervalAuto;
-  transp->modulation = DvbT2Transponder::ModulationAuto;
-  transp->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
-    */
+    int i = 0;
 
-  DvbT2Transponder *t = new DvbT2Transponder();
-  memset(t, 0, sizeof(DvbT2Transponder));
-  t->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
-  t->frequency = 500000000;
-  t->modulation = DvbT2Transponder::Qam256; // DvbT2Transponder::ModulationAuto;
-                                            // //DvbT2Transponder::Qam256;
-  t->fecRateHigh = DvbT2Transponder::FecAuto;
-  t->fecRateLow = DvbT2Transponder::FecNone;
-  t->guardInterval = DvbT2Transponder::GuardIntervalAuto;
-  t->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
+    DvbT2Transponder *transpRaw = new DvbT2Transponder();
+    memset(transpRaw, 0, sizeof(DvbT2Transponder));
+    transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
+    transpRaw->frequency = 500000000;
+    transpRaw->modulation =
+        DvbT2Transponder::Qam256; // DvbT2Transponder::ModulationAuto;
+    transpRaw->fecRateHigh = DvbT2Transponder::FecAuto;
+    transpRaw->fecRateLow = DvbT2Transponder::FecNone;
+    transpRaw->guardInterval = DvbT2Transponder::GuardIntervalAuto;
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
 
-  DvbTransponder transponder(DvbTransponderBase::DvbT2);
-  DvbTransponder transpRepr = transponder.fromString(t->toString());
-  // delete transp;
-
-  QApplication::processEvents();
-
-  device->tune(transpRepr);
-
-  QThread::currentThread()->msleep(2000);
-
-  // for (int f : freqs) {
-
-  for (int f = f1; f <= f2; f += step) {
-
-    if (stoppedAnalize)
-      break;
-    float fMhz = f / mille;
-
-    ui->lineEditCurrent->setText(QString::number((int)fMhz));
-
-    t->frequency = f;
-    transpRepr = transponder.fromString(t->toString());
-    device->tune(transpRepr);
-
-    /* obtain the signal data */
-    float sig = device->getSignal(s);
-    float sig2 = 1 / sig;
-    float snr = device->getSnr(s);
-
-    // double sig2 = sigs.at(i);
-
-    signalData[i].key = fMhz;
-    signalData[i].value = sig2;
-
-    /* do plotting */
-    customPlot->graph()->data()->set(signalData);
-    ui->plot->replot();
-
-    qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
+    DvbTransponder transponder(DvbTransponderBase::DvbT2);
+    DvbTransponder transpRepr = transponder.fromString(transpRaw->toString());
+    // delete transp;
 
     QApplication::processEvents();
-    // QThread::currentThread()->msleep(100);
 
-    i++;
-  }
+    // device->tune(transpRepr);
 
-  qDebug() << "done!";
+    // QThread::currentThread()->msleep(2000);
 
-  device->release();
+    // for (int f : freqs) {
+
+    for (int f = f1; f <= f2; f += step) {
+
+      if (stoppedAnalize)
+        break;
+      float fMhz = f / mille;
+
+      ui->lineEditCurrent->setText(QString::number((int)fMhz));
+
+      transpRaw->frequency = f;
+      transpRepr = transponder.fromString(transpRaw->toString());
+      device->tune(transpRepr);
+
+      /* obtain the signal data */
+      float sig = device->getSignal(s);
+      float sig2 = 1 / sig;
+
+      if (sig == 100)
+        sig2 = 0;
+
+      float snr = device->getSnr(s);
+      // double sig2 = sigs.at(i);
+
+      signalData[i].key = fMhz;
+      signalData[i].value = sig2;
+
+      /* do plotting */
+      customPlot->graph()->data()->set(signalData);
+      ui->plot->replot();
+
+      qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
+
+      QApplication::processEvents();
+      // QThread::currentThread()->msleep(100);
+
+      i++;
+    }
+
+    qDebug() << "done!";
+
+    device->release();
+
+  } while (ui->checkBoxNonStop->isChecked());
 
   /* create multiple graphs:
   for (int gi=0; gi<5; ++gi)
