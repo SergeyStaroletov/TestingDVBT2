@@ -300,7 +300,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
     customPlot->yAxis2->setTickLabels(false);
     // set axis ranges to show all data:
     customPlot->xAxis->setRange(f1 / mille, f2 / mille);
-    customPlot->yAxis->setRange(mins, maxs);
+    customPlot->yAxis->setRange(mins, maxs * 1.2);
     // show legend with slightly transparent background brush:
     customPlot->legend->setVisible(true);
     customPlot->legend->setBrush(QColor(255, 255, 255, 150));
@@ -370,7 +370,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
   memset(t, 0, sizeof(DvbT2Transponder));
   t->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
   t->frequency = 522000000;
-  t->modulation = DvbT2Transponder::Qam256; //DvbT2Transponder::ModulationAuto;
+  t->modulation =   DvbT2Transponder::Qam256;// DvbT2Transponder::ModulationAuto; //DvbT2Transponder::Qam256;
   t->fecRateHigh = DvbT2Transponder::FecAuto;
   t->fecRateLow = DvbT2Transponder::FecNone;
   t->guardInterval = DvbT2Transponder::GuardIntervalAuto;
@@ -392,14 +392,14 @@ void TestDialog::on_pushButtonAnalize_clicked()
   //for (int f = 500000000; f < 600000000;f+=1000000) {
 
 
-  for (int f : freqs) {
+  //for (int f : freqs) {
 
-  //for (int f = f1; f <= f2; f += step) {
+  for (int f = f1; f <= f2; f += step) {
 
       if (stoppedAnalize) break;
 
 
-      t->frequency = f * mille;//522000000;
+      t->frequency = f;//522000000;
       transpRepr = transponder.fromString(t->toString());
 
       device->tune(transpRepr);
@@ -413,9 +413,9 @@ void TestDialog::on_pushButtonAnalize_clicked()
 
 
       //double sig2 = sigs.at(i);
-      float fMhz = f;
+      float fMhz = f / mille;
 
-      signalData[i].key = f;
+      signalData[i].key = fMhz;
       signalData[i].value = sig2;
 
       /* do plotting */
@@ -425,7 +425,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
       qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
 
        QApplication::processEvents();
-       QThread::currentThread()->msleep(100);
+       //QThread::currentThread()->msleep(100);
 
        i++;
    }
