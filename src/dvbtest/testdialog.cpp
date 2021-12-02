@@ -369,7 +369,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
   DvbT2Transponder *t = new DvbT2Transponder();
   memset(t, 0, sizeof(DvbT2Transponder));
   t->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
-  t->frequency = 500000000;
+  t->frequency = 522000000;
   t->modulation = DvbT2Transponder::Qam256; //DvbT2Transponder::ModulationAuto;
   t->fecRateHigh = DvbT2Transponder::FecAuto;
   t->fecRateLow = DvbT2Transponder::FecNone;
@@ -381,7 +381,10 @@ void TestDialog::on_pushButtonAnalize_clicked()
   DvbTransponder transpRepr = transponder.fromString(t->toString());
   //delete transp;
 
+  QApplication::processEvents();
+
   device->tune(transpRepr);
+
 
   QThread::currentThread()->msleep(2000);
 
@@ -398,17 +401,19 @@ void TestDialog::on_pushButtonAnalize_clicked()
 
       t->frequency = f * mille;//522000000;
       transpRepr = transponder.fromString(t->toString());
-      device->getProps(transpRepr);
+
+      device->tune(transpRepr);
+     // device->getProps(transpRepr);
 
 
       /* obtain the signal data */
-      //float sig = device->getSignal(s);
-      //float sig2 = 1 / sig;
-      //float snr = device->getSnr(s);
+      float sig = device->getSignal(s);
+      float sig2 = 1 / sig;
+      float snr = device->getSnr(s);
 
 
-      double sig2 = sigs.at(i);
-      //float fMhz = f / mille;
+      //double sig2 = sigs.at(i);
+      float fMhz = f;
 
       signalData[i].key = f;
       signalData[i].value = sig2;
@@ -417,7 +422,7 @@ void TestDialog::on_pushButtonAnalize_clicked()
       customPlot->graph()->data()->set(signalData);
       ui->plot->replot();
 
-      //qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
+      qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
 
        QApplication::processEvents();
        QThread::currentThread()->msleep(100);
@@ -427,6 +432,8 @@ void TestDialog::on_pushButtonAnalize_clicked()
 
   qDebug() << "done!";
 
+
+  device->release();
 
   /* create multiple graphs:
   for (int gi=0; gi<5; ++gi)

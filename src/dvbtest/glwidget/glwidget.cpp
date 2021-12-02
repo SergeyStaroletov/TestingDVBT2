@@ -269,7 +269,7 @@ void GLWidget::initializeGL()
     */
 
 
-    FILE *f = fopen("/home/sergey/Desktop/VV016-256QAM34_CSP/TestPoint06/VV016-256QAM34_TP06_CSP.txt", "r");
+    FILE *f = fopen("/home/sergey/Projects/dvb_data/TestPoint06/VV016-256QAM34_TP06_CSP.txt", "r");
 
     std::vector<unsigned char> iqq;
 
