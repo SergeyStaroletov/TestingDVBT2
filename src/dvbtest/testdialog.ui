@@ -281,7 +281,7 @@
      <property name="geometry">
       <rect>
        <x>70</x>
-       <y>20</y>
+       <y>16</y>
        <width>61</width>
        <height>25</height>
       </rect>
@@ -294,7 +294,7 @@
      <property name="geometry">
       <rect>
        <x>210</x>
-       <y>20</y>
+       <y>16</y>
        <width>61</width>
        <height>25</height>
       </rect>
@@ -307,7 +307,7 @@
      <property name="geometry">
       <rect>
        <x>375</x>
-       <y>20</y>
+       <y>16</y>
        <width>71</width>
        <height>25</height>
       </rect>
@@ -358,7 +358,7 @@
      <property name="geometry">
       <rect>
        <x>460</x>
-       <y>20</y>
+       <y>16</y>
        <width>89</width>
        <height>25</height>
       </rect>
@@ -370,7 +370,7 @@
     <widget class="QCheckBox" name="checkBoxNonStop">
      <property name="geometry">
       <rect>
-       <x>460</x>
+       <x>560</x>
        <y>50</y>
        <width>92</width>
        <height>23</height>
@@ -394,7 +394,7 @@
      <property name="geometry">
       <rect>
        <x>560</x>
-       <y>20</y>
+       <y>16</y>
        <width>89</width>
        <height>25</height>
       </rect>
@@ -406,7 +406,7 @@
     <widget class="QCheckBox" name="checkBoxAppend">
      <property name="geometry">
       <rect>
-       <x>130</x>
+       <x>290</x>
        <y>50</y>
        <width>261</width>
        <height>23</height>
@@ -417,6 +417,32 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>101</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Current freq:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEditCurrent">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>48</y>
+       <width>61</width>
+       <height>25</height>
+      </rect>
      </property>
     </widget>
    </widget>
