@@ -1,4 +1,4 @@
-DVB Test Dialog based on Kaffeine
+DVB-T2 Test Dialog based on Kaffeine
 ===================
 
 Integrates qt plot widget, map from the mission planner project, and rtl-sdr.
