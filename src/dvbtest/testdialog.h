@@ -24,6 +24,8 @@ private slots:
 
   void on_checkBoxGroupNearest_stateChanged(int arg1);
 
+  void on_pushButtonGISStartScan_clicked();
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;

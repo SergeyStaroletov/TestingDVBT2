@@ -485,7 +485,7 @@
       </property>
      </column>
     </widget>
-    <widget class="QPushButton" name="pushButton_2">
+    <widget class="QPushButton" name="pushButtonGISStartScan">
      <property name="geometry">
       <rect>
        <x>260</x>
@@ -498,7 +498,7 @@
       <string>Start scan</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_3">
+    <widget class="QPushButton" name="pushButtonGISStopScan">
      <property name="geometry">
       <rect>
        <x>390</x>
@@ -554,7 +554,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_4">
+    <widget class="QPushButton" name="pushButtonClear">
      <property name="geometry">
       <rect>
        <x>630</x>
@@ -567,7 +567,7 @@
       <string>Clear data</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_5">
+    <widget class="QPushButton" name="pushButtonToCSV">
      <property name="geometry">
       <rect>
        <x>630</x>

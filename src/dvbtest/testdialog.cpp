@@ -32,14 +32,15 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   this->manager = manager;
   this->num_graphs = -1;
 
-  this->max_found_sig = 0.00452931;
+  this->max_found_snr = -1;
+  this->min_found_snr = 32768;
 
+  this->max_found_sig = 0.00452931;
   this->min_found_sig = 0.00385977;
 
   // oooops
 
   FILE *f = fopen("/home/sergey/dvb_drive.csv", "r");
-
   QTableWidget *table = ui->tablePoints;
 
   int r = 0;
@@ -57,6 +58,22 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
     QString lock = lst[3];
     QString sig = lst[4];
     QString snr = lst[5];
+    sig = sig.replace(",", ".");
+    snr = snr.replace(",", ".");
+    double Snr = snr.toDouble();
+    double Sig = sig.toDouble();
+
+    Sig = 1 / fabs(Sig);
+    if (max_found_sig < Sig)
+      max_found_sig = Sig;
+    if (min_found_sig > Sig)
+      min_found_sig = Sig;
+
+    if (max_found_snr < Snr)
+      max_found_snr = Snr;
+    if (Snr != -1 && min_found_snr > Snr)
+      min_found_snr = Snr;
+
     table->insertRow(r);
     dateStr = dateStr.replace("\"", "");
     table->setItem(table->rowCount() - 1, 0, new QTableWidgetItem(dateStr));
@@ -70,9 +87,19 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   }
   fclose(f);
 
-  // opengl widget
-  // QRect sz = ui->widgetView->contentsRect();
-  // ui->widgetView=new Window(this->window());
+  qDebug() << "min_found_snr = " << min_found_snr << "\n";
+  qDebug() << "max_found_snr = " << max_found_snr << "\n";
+
+  qDebug() << "min_found_sig = " << min_found_sig << "\n";
+  qDebug() << "max_found_sig = " << max_found_sig << "\n";
+
+  min_found_snr = 15.5;
+  max_found_snr = 39.4;
+
+  min_found_sig = 0.00385977;
+  max_found_sig = 0.0118816;
+
+  // OpenGL Widget
 
   QGridLayout *layout = new QGridLayout(ui->widgetView);
   layout->addWidget(new Window(ui->widgetView));
@@ -159,11 +186,6 @@ void TestDialog::on_pushButton_clicked() {
 
   device->tune(tt);
 
-  // DvbScan* scan = new DvbScan(device, src, tt, false);
-
-  // ScanThread * th = new ScanThread(scan);
-  // th->start();
-
   FILE *f = fopen("/home/sergey/dvb_test.csv", "w");
 
   char gps_norm[] = "0;0;";
@@ -231,6 +253,8 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
   const int mille = 1000000;
 
+  double max_us = maxs;
+
   do {
 
     int f1 = (int)(ui->lineEditFrom->text().toFloat() * mille);
@@ -262,7 +286,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       customPlot->yAxis2->setTickLabels(false);
       // set axis ranges to show all data:
       customPlot->xAxis->setRange(f1 / mille, f2 / mille);
-      customPlot->yAxis->setRange(mins, maxs * 1.2);
+      customPlot->yAxis->setRange(mins, max_us * 1.2);
       // show legend with slightly transparent background brush:
       customPlot->legend->setVisible(true);
       customPlot->legend->setBrush(QColor(255, 255, 255, 150));
@@ -270,8 +294,11 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       ui->plot->axisRect()->setupFullAxesBox(true);
       ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
       num_graphs = 0;
-    } else
+      max_us = 0;
+
+    } else {
       num_graphs++;
+    }
 
     /* prepare the card and scan params */
     stopped_analize = false;
@@ -306,7 +333,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
     int countPoints = (f2 - f1 + 1) / step + 1;
 
-    if (num_graphs > 4) {
+    if (num_graphs > 4) { // max graph count
       num_graphs = 0;
       customPlot->clearGraphs();
     }
@@ -357,6 +384,9 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       float sig = device->getSignal(s);
       float sig2 = 1 / sig;
 
+      if (sig2 > maxs)
+        maxs = sig2;
+
       if (sig == 100)
         sig2 = 0;
 
@@ -382,6 +412,14 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
     device->release();
 
+    // update scale
+    customPlot->yAxis->setRange(mins, max_us * 1.2);
+    ui->plot->axisRect()->setupFullAxesBox(true);
+    customPlot->yAxis->rescale();
+    ui->plot->replot();
+
+    QApplication::processEvents();
+
   } while (ui->checkBoxNonStop->isChecked());
 }
 
@@ -390,4 +428,8 @@ void TestDialog::on_pushButtonStopAnalize_clicked() { stopped_analize = true; }
 void TestDialog::on_checkBoxGroupNearest_stateChanged(int arg1) {
   is_group = !is_group;
   ui->widgetView->repaint();
+}
+
+void TestDialog::on_pushButtonGISStartScan_clicked() {
+  //
 }
