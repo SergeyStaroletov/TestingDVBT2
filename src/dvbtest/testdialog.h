@@ -28,6 +28,10 @@ private:
   Ui::TestDialog *ui;
   DvbManager *manager;
   int num_graphs;
+  double max_found_sig;
+  double min_found_sig;
+  double max_found_snr;
+  double min_found_snr;
 };
 
 #endif // TESTDIALOG_H

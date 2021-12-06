@@ -13,7 +13,7 @@
 #include <iostream>
 #include <stdio.h>
 
-static bool stoppedAnalize = false;
+static bool stopped_analize = false;
 
 bool is_group;
 
@@ -31,6 +31,10 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   ui->setupUi(this);
   this->manager = manager;
   this->num_graphs = -1;
+
+  this->max_found_sig = 0.00452931;
+
+  this->min_found_sig = 0.00385977;
 
   // oooops
 
@@ -222,36 +226,8 @@ void TestDialog::on_pushButton_clicked() {
 
 void TestDialog::on_pushButtonAnalize_clicked() {
 
-  std::vector<int> freqs;
-  std::vector<double> sigs;
-
-  double maxs = -1;
-  double mins = 32768;
-
-  int r = 0;
-  FILE *f = fopen("/home/sergey/sig.txt", "r");
-  while (!feof(f)) {
-    char buf[200];
-    memset(buf, 0, sizeof(buf));
-    fgets(buf, 200, f);
-    QString b = QString::fromLocal8Bit(buf);
-    QStringList lst = b.split(";");
-    if (lst.size() < 3)
-      continue;
-    QString freq = lst[0];
-    QString sig = lst[1];
-    sig = sig.replace(",", ".");
-    int fr = freq.toInt();
-    double sigg = sig.toDouble();
-    if (sigg > maxs)
-      maxs = sigg;
-    if (sigg < mins)
-      mins = sigg;
-    freqs.push_back(fr);
-    sigs.push_back(sigg);
-    r++;
-  }
-  fclose(f);
+  double maxs = this->max_found_sig; // ONLY FOR ASTROMETA CARD!
+  double mins = this->min_found_sig;
 
   const int mille = 1000000;
 
@@ -296,15 +272,15 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       num_graphs = 0;
     } else
       num_graphs++;
-    /* prepare the card and scan params */
 
-    stoppedAnalize = false;
+    /* prepare the card and scan params */
+    stopped_analize = false;
 
     if (manager->getDeviceConfigs().size() == 0)
       return;
 
     DvbDevice *device = manager->getDeviceConfigs().at(1).device;
-    device->getDeviceId();
+
     const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
 
     DvbConfig cfg;
@@ -362,19 +338,12 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
     DvbTransponder transponder(DvbTransponderBase::DvbT2);
     DvbTransponder transpRepr = transponder.fromString(transpRaw->toString());
-    // delete transp;
 
     QApplication::processEvents();
 
-    // device->tune(transpRepr);
-
-    // QThread::currentThread()->msleep(2000);
-
-    // for (int f : freqs) {
-
     for (int f = f1; f <= f2; f += step) {
 
-      if (stoppedAnalize)
+      if (stopped_analize)
         break;
       float fMhz = f / mille;
 
@@ -391,7 +360,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       if (sig == 100)
         sig2 = 0;
 
-      float snr = device->getSnr(s);
+      // float snr = device->getSnr(s);
       // double sig2 = sigs.at(i);
 
       signalData[i].key = fMhz;
@@ -401,7 +370,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       customPlot->graph()->data()->set(signalData);
       ui->plot->replot();
 
-      qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
+      // qDebug() << fMhz << ";" << sig << ";" << sig2 << ";" << snr << "\n";
 
       QApplication::processEvents();
       // QThread::currentThread()->msleep(100);
@@ -414,36 +383,9 @@ void TestDialog::on_pushButtonAnalize_clicked() {
     device->release();
 
   } while (ui->checkBoxNonStop->isChecked());
-
-  /* create multiple graphs:
-  for (int gi=0; gi<5; ++gi)
-  {
-    customPlot->addGraph();
-    QColor color(20+200/4.0*gi,70*(1.6-gi/4.0), 150, 150);
-    customPlot->graph()->setLineStyle(QCPGraph::lsLine);
-    customPlot->graph()->setPen(QPen(color.lighter(200)));
-    customPlot->graph()->setBrush(QBrush(color));
-    // generate random walk data:
-    QVector<QCPGraphData> timeData(250);
-    for (int i=0; i<250; ++i)
-    {
-      timeData[i].key = now + 24*3600*i;
-      if (i == 0)
-        timeData[i].value = (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      else
-        timeData[i].value = qFabs(timeData[i-1].value)*(1+0.02/4.0*(4-gi)) +
-  (i/50.0+1)*(rand()/(double)RAND_MAX-0.5);
-      customPlot->graph()->data()->set(timeData);
-      ui->plot->replot();
-
-      QThread::currentThread()->msleep(100);
-      QApplication::processEvents();
-    }
-  }
-  */
 }
 
-void TestDialog::on_pushButtonStopAnalize_clicked() { stoppedAnalize = true; }
+void TestDialog::on_pushButtonStopAnalize_clicked() { stopped_analize = true; }
 
 void TestDialog::on_checkBoxGroupNearest_stateChanged(int arg1) {
   is_group = !is_group;
