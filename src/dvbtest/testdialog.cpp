@@ -2,8 +2,10 @@
 #include "qcustomplot.h"
 #include "ui_testdialog.h"
 #include "window.h"
+#include <KLocalizedString>
 #include <QDebug>
 #include <QThread>
+
 #include <dvb/dvbbackenddevice.h>
 #include <dvb/dvbconfig.h>
 #include <dvb/dvbdevice.h>
@@ -16,6 +18,70 @@
 static bool stopped_analize = false;
 
 bool is_group;
+
+DvbGradProgress2::DvbGradProgress2(QWidget *parent)
+    : QLabel(parent), value(0), max(100.), min(0.) {
+  setAlignment(Qt::AlignCenter);
+  setFrameShape(Box);
+  setText("");
+}
+
+DvbGradProgress2::~DvbGradProgress2() {}
+
+void DvbGradProgress2::setValue(float value_, DvbBackendDevice::Scale scale,
+                                float max_, float min_) {
+  QString text;
+  value = value_;
+
+  switch (scale) {
+  case DvbBackendDevice::NotSupported: {
+    text = '-';
+    max = 100;
+    min = 0;
+    break;
+  }
+  case DvbBackendDevice::Percentage: {
+    float value2 = (value_ - min_) / (max_ - min_) * 100;
+    text = QString::number(value2, 'f', 0) + '%';
+    max = max_;
+    min = min_;
+    break;
+  }
+  case DvbBackendDevice::Decibel: {
+    text = QString::number(value, 'f', 2) + " dB";
+    max = 40;
+    min = 0;
+    break;
+  }
+  case DvbBackendDevice::dBuV: {
+    text =
+        QString::number(value, 'f', 2) + " dB" + QString((QChar)0x00b5) + 'V';
+    max = 80;
+    min = 20;
+    break;
+  }
+  }
+
+  setText(i18n("%1", text));
+  update();
+}
+
+void DvbGradProgress2::paintEvent(QPaintEvent *event) {
+  QPainter painter(this);
+  int border = frameWidth();
+  QRect rect(border, border, width() - 2 * border, height() - 2 * border);
+  QLinearGradient gradient(rect.topLeft(), rect.topRight());
+  gradient.setColorAt(0, Qt::red);
+  gradient.setColorAt(1, Qt::green);
+  if (value < min)
+    value = min;
+  if (value > max)
+    value = max;
+  rect.setWidth((rect.width() * (value - min)) / (max - min));
+  painter.fillRect(rect, gradient);
+
+  QLabel::paintEvent(event);
+}
 
 class ScanThread : public QThread {
 public:
@@ -433,3 +499,77 @@ void TestDialog::on_checkBoxGroupNearest_stateChanged(int arg1) {
 void TestDialog::on_pushButtonGISStartScan_clicked() {
   //
 }
+
+void TestDialog::on_buttonStartLocking_clicked() {
+
+  stopped_analize = false;
+
+  DvbDevice *device = manager->getDeviceConfigs().at(1).device;
+
+  const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
+
+  DvbConfig cfg;
+  foreach (const DvbConfig &config, it.configs) {
+    if (config->name == "Terrestrial (T2)") {
+      device = it.device;
+      device->acquire(config.constData());
+      cfg = config;
+      qDebug() << config->name;
+      ui->labelCard->setText(device->getFrontendName());
+      break;
+    }
+  }
+
+  if (device == NULL) {
+    qDebug() << "No device!";
+    return;
+  }
+
+  DvbBackendDevice::Scale s;
+
+  // tune to a transponder
+  DvbT2Transponder *transpRaw = new DvbT2Transponder();
+  memset(transpRaw, 0, sizeof(DvbT2Transponder));
+  transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
+  transpRaw->modulation =
+      DvbT2Transponder::Qam256; // DvbT2Transponder::ModulationAuto;
+  transpRaw->fecRateHigh = DvbT2Transponder::FecAuto;
+  transpRaw->fecRateLow = DvbT2Transponder::FecNone;
+  transpRaw->guardInterval = DvbT2Transponder::GuardIntervalAuto;
+  transpRaw->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
+
+  DvbTransponder transponder(DvbTransponderBase::DvbT2);
+  DvbTransponder transpRepr;
+
+  transpRaw->frequency = 522000000;
+  transpRepr = transponder.fromString(transpRaw->toString());
+  device->tune(transpRepr);
+
+  while (!stopped_analize) {
+    float sig = device->getSignal(s);
+    float sig2 = 1 / sig;
+    float snr = device->getSnr(s);
+
+    ui->labelSig->setValue(sig2, DvbBackendDevice::Percentage,
+                           this->max_found_sig, this->min_found_sig);
+
+    qDebug() << "sig = " << sig2 << "  snr = " << snr << "\n";
+
+    if (snr != -1) {
+      ui->checkBoxLocked->setChecked(true);
+      ui->labelSnr->setValue(snr, DvbBackendDevice::Percentage,
+                             this->max_found_snr, this->min_found_snr);
+    } else {
+      ui->checkBoxLocked->setChecked(true);
+      ui->labelSnr->setValue(0, DvbBackendDevice::Percentage,
+                             this->max_found_snr, 0);
+    }
+
+    QThread::currentThread()->msleep(100);
+    QApplication::processEvents();
+  }
+
+  device->release();
+}
+
+void TestDialog::on_buttonStopLocking_clicked() { stopped_analize = true; }

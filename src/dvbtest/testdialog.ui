@@ -52,25 +52,12 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>Transponders/Antenna Adjust</string>
     </attribute>
-    <widget class="QProgressBar" name="progressBarLevel">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>300</y>
-       <width>561</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="value">
-      <number>0</number>
-     </property>
-    </widget>
     <widget class="QGroupBox" name="groupBox">
      <property name="geometry">
       <rect>
@@ -246,17 +233,30 @@
       <string>Signal Quality</string>
      </property>
     </widget>
-    <widget class="QProgressBar" name="progressBarQuality">
+    <widget class="DvbGradProgress2" name="labelSig">
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>380</y>
+       <y>307</y>
        <width>561</width>
-       <height>23</height>
+       <height>20</height>
       </rect>
      </property>
-     <property name="value">
-      <number>0</number>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="DvbGradProgress2" name="labelSnr">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>390</y>
+       <width>561</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </widget>
@@ -814,6 +814,11 @@
    <extends>QWidget</extends>
    <header location="global">QGCMapWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DvbGradProgress2</class>
+   <extends>QLabel</extends>
+   <header>dvbtest/testdialog.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

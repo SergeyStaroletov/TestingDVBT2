@@ -2,6 +2,8 @@
 #define TESTDIALOG_H
 
 #include <QDialog>
+#include <QLabel>
+#include <dvb/dvbbackenddevice.h>
 #include <dvb/dvbmanager.h>
 
 namespace Ui {
@@ -26,6 +28,10 @@ private slots:
 
   void on_pushButtonGISStartScan_clicked();
 
+  void on_buttonStartLocking_clicked();
+
+  void on_buttonStopLocking_clicked();
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;
@@ -34,6 +40,21 @@ private:
   double min_found_sig;
   double max_found_snr;
   double min_found_snr;
+};
+
+class DvbGradProgress2 : public QLabel {
+public:
+  explicit DvbGradProgress2(QWidget *parent);
+  ~DvbGradProgress2();
+
+  void setValue(float value_, DvbBackendDevice::Scale scale, float _min,
+                float _max);
+
+protected:
+  void paintEvent(QPaintEvent *event) override;
+
+private:
+  float value, max, min;
 };
 
 #endif // TESTDIALOG_H
