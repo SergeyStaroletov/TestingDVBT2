@@ -73,11 +73,14 @@
      <widget class="QTableWidget" name="tableTranspondersList">
       <property name="geometry">
        <rect>
-        <x>60</x>
+        <x>10</x>
         <y>30</y>
-        <width>321</width>
+        <width>431</width>
         <height>161</height>
        </rect>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
       </property>
       <row>
        <property name="text">
@@ -101,6 +104,11 @@
       </column>
       <column>
        <property name="text">
+        <string>Transmission mode</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
         <string>Modulation</string>
        </property>
       </column>
@@ -115,6 +123,11 @@
        </property>
       </item>
       <item row="0" column="2">
+       <property name="text">
+        <string>AUTO</string>
+       </property>
+      </item>
+      <item row="0" column="3">
        <property name="text">
         <string>QAM256</string>
        </property>
@@ -131,6 +144,11 @@
       </item>
       <item row="1" column="2">
        <property name="text">
+        <string>AUTO</string>
+       </property>
+      </item>
+      <item row="1" column="3">
+       <property name="text">
         <string>QAM256</string>
        </property>
       </item>
@@ -138,7 +156,7 @@
      <widget class="QPushButton" name="buttonAddTransponder">
       <property name="geometry">
        <rect>
-        <x>430</x>
+        <x>450</x>
         <y>50</y>
         <width>89</width>
         <height>25</height>
@@ -151,7 +169,7 @@
      <widget class="QPushButton" name="buttonRemoveTransponder">
       <property name="geometry">
        <rect>
-        <x>430</x>
+        <x>450</x>
         <y>90</y>
         <width>89</width>
         <height>25</height>

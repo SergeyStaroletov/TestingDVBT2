@@ -32,6 +32,10 @@ private slots:
 
   void on_buttonStopLocking_clicked();
 
+  void on_buttonAddTransponder_clicked();
+
+  void on_buttonRemoveTransponder_clicked();
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;
