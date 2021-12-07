@@ -544,6 +544,8 @@ void TestDialog::on_buttonStartLocking_clicked() {
   transpRaw->frequency = 522000000;
   transpRepr = transponder.fromString(transpRaw->toString());
   device->tune(transpRepr);
+  int timer_no_signal = 0;
+  const int pause_ms = 100;
 
   while (!stopped_analize) {
     float sig = device->getSignal(s);
@@ -559,13 +561,23 @@ void TestDialog::on_buttonStartLocking_clicked() {
       ui->checkBoxLocked->setChecked(true);
       ui->labelSnr->setValue(snr, DvbBackendDevice::Percentage,
                              this->max_found_snr, this->min_found_snr);
+      timer_no_signal = 0;
+
     } else {
-      ui->checkBoxLocked->setChecked(true);
+      ui->checkBoxLocked->setChecked(false);
       ui->labelSnr->setValue(0, DvbBackendDevice::Percentage,
                              this->max_found_snr, 0);
+      timer_no_signal += pause_ms;
     }
 
-    QThread::currentThread()->msleep(100);
+    // we have no signal more than 30 cycles
+    if (timer_no_signal > pause_ms * 30) {
+      // retune
+      device->tune(transpRepr);
+      timer_no_signal = 0;
+    }
+
+    QThread::currentThread()->msleep(pause_ms);
     QApplication::processEvents();
   }
 
