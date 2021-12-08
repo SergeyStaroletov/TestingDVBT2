@@ -15,6 +15,7 @@ Please wait for updates.
 
 For plotting, it uses QCustomPlot, a modern plotting widget for Qt by Emanuel Eichhammer       
 
+<img src = "dvb0.png" width = "50%" />
 <img src = "dvb1.png" width = "50%" />
 <img src = "dvb2.png" width = "50%" />
 <img src = "dvb3.png" width = "50%"/>
