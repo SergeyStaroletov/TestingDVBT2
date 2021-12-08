@@ -1,7 +1,7 @@
 DVB-T2 Test Dialog based on Kaffeine
 ===================
 
-Integrates qt plot widget, map from the mission planner project, and rtl-sdr.
+Integrates qt plot widget, map from the mission planner project, and rtl-sdr. See <a href = "src/dvbtest">src/dvbtest</a>
 
 It uses Kaffeine classes to work with transponders and a DVB card (tested only with Astrometa/Sony). 
 
