@@ -183,7 +183,7 @@
     <widget class="QPushButton" name="buttonStartLocking">
      <property name="geometry">
       <rect>
-       <x>200</x>
+       <x>360</x>
        <y>230</y>
        <width>111</width>
        <height>25</height>
@@ -196,7 +196,7 @@
     <widget class="QPushButton" name="buttonStopLocking">
      <property name="geometry">
       <rect>
-       <x>360</x>
+       <x>500</x>
        <y>230</y>
        <width>111</width>
        <height>25</height>
@@ -275,6 +275,19 @@
      </property>
      <property name="text">
       <string/>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxFast">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>230</y>
+       <width>141</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Fast (no quality)</string>
      </property>
     </widget>
    </widget>

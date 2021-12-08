@@ -95,6 +95,8 @@ private:
 TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
     : QDialog(parent), ui(new Ui::TestDialog) {
   ui->setupUi(this);
+  this->is_fast_lock = false;
+
   this->manager = manager;
   this->num_graphs = -1;
 
@@ -539,8 +541,11 @@ void TestDialog::on_buttonStartLocking_clicked() {
   // tune to a transponder
   DvbT2Transponder *transpRaw = new DvbT2Transponder();
   memset(transpRaw, 0, sizeof(DvbT2Transponder));
-  transpRaw->bandwidth = DvbT2Transponder::Bandwidth8MHz;
-
+  if (is_fast_lock) {
+    transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
+  } else {
+    transpRaw->bandwidth = DvbT2Transponder::Bandwidth8MHz;
+  };
   QString mod = table->item(row, 3)->text().toLower();
   transpRaw->modulation = DvbT2Transponder::ModulationAuto;
   if (mod == "qam256")
@@ -637,6 +642,12 @@ void TestDialog::on_buttonStartLocking_clicked() {
     if (timer_no_signal > pause_ms * 30) {
       // retune
       qDebug() << "retuning... \n";
+      if (is_fast_lock) {
+        transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
+      } else {
+        transpRaw->bandwidth = DvbT2Transponder::Bandwidth8MHz;
+      };
+      transpRepr = transponder.fromString(transpRaw->toString());
       device->tune(transpRepr);
       timer_no_signal = 0;
     }
@@ -661,4 +672,8 @@ void TestDialog::on_buttonRemoveTransponder_clicked() {
   int r = table->currentRow();
   if (r >= 0)
     table->removeRow(r);
+}
+
+void TestDialog::on_checkBoxFast_stateChanged(int arg1) {
+  is_fast_lock = ui->checkBoxFast->isChecked();
 }

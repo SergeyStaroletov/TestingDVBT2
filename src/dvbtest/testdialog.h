@@ -36,6 +36,8 @@ private slots:
 
   void on_buttonRemoveTransponder_clicked();
 
+  void on_checkBoxFast_stateChanged(int arg1);
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;
@@ -44,6 +46,7 @@ private:
   double min_found_sig;
   double max_found_snr;
   double min_found_snr;
+  bool is_fast_lock;
 };
 
 class DvbGradProgress2 : public QLabel {
