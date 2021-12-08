@@ -327,9 +327,14 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
     int f1 = (int)(ui->lineEditFrom->text().toFloat() * mille);
     int f2 = (int)(ui->lineEditTo->text().toFloat() * mille);
-    int step =
-        ui->comboBoxStep->itemText(ui->comboBoxStep->currentIndex()).toInt() *
-        mille;
+    int step;
+
+    QString step_str =
+        ui->comboBoxStep->itemText(ui->comboBoxStep->currentIndex());
+    if (step_str != "0.5")
+      step = step_str.toInt() * mille;
+    else
+      step = 0.5 * mille;
 
     /* prepare the graph */
 
@@ -457,6 +462,9 @@ void TestDialog::on_pushButtonAnalize_clicked() {
 
       if (sig == 100)
         sig2 = 0;
+
+      if (sig2 == 0 || sig2 == -1)
+        sig2 = mins;
 
       // float snr = device->getSnr(s);
       // double sig2 = sigs.at(i);
@@ -614,16 +622,48 @@ void TestDialog::on_buttonStartLocking_clicked() {
   const int pause_ms = 100;
 
   while (!stopped_analize) {
+    // obtain values
     float sig = device->getSignal(s);
+
+    QString sig_str = QString::number(sig, 'g', 4);
+    switch (s) {
+    case DvbBackendDevice::NotSupported:
+      sig_str += " pts";
+      break;
+    case DvbBackendDevice::Percentage:
+      sig_str += " %%";
+      break;
+    case DvbBackendDevice::Decibel:
+      sig_str += " dB";
+      break;
+    case DvbBackendDevice::dBuV:
+      sig_str += " dBuV";
+    }
+    ui->labelSigLev->setText(sig_str);
+
     float sig2 = 1 / sig;
     if (sig == 100)
       sig2 = 0;
     float snr = device->getSnr(s);
 
+    QString snr_str = QString::number(snr, 'g', 4);
+    switch (s) {
+    case DvbBackendDevice::NotSupported:
+      snr_str += " pts";
+      break;
+    case DvbBackendDevice::Percentage:
+      snr_str += " %%";
+      break;
+    case DvbBackendDevice::Decibel:
+      snr_str += " dB";
+      break;
+    case DvbBackendDevice::dBuV:
+      snr_str += " dBuV";
+    }
+    ui->labelSnrLev->setText(snr_str);
+
     ui->labelSig->setValue(sig2, DvbBackendDevice::Percentage,
                            this->max_found_sig, this->min_found_sig);
-
-    qDebug() << "sig = " << sig2 << "  snr = " << snr << "\n";
 
     if (snr != -1) {
       ui->checkBoxLocked->setChecked(true);

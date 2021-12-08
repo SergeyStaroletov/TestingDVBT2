@@ -52,7 +52,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -208,7 +208,7 @@
     </widget>
     <widget class="QCheckBox" name="checkBoxLocked">
      <property name="enabled">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="geometry">
       <rect>
@@ -222,7 +222,7 @@
       <string>Signal Lock</string>
      </property>
      <property name="checkable">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QLabel" name="label">
@@ -290,6 +290,32 @@
       <string>Fast (no quality)</string>
      </property>
     </widget>
+    <widget class="QLabel" name="labelSigLev">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>280</y>
+       <width>151</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelSnrLev">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>360</y>
+       <width>151</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_4">
     <attribute name="title">
@@ -350,12 +376,22 @@
      </item>
      <item>
       <property name="text">
+       <string>2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>4</string>
       </property>
      </item>
      <item>
       <property name="text">
        <string>8</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>0.5</string>
       </property>
      </item>
     </widget>
