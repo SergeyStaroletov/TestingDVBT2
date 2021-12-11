@@ -15,6 +15,26 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "dvbtest/rtl_sdr/convenience/convenience.h"
+#include "dvbtest/rtl_sdr/include/rtl-sdr.h"
+
+// for rtl-sdr
+#define DEFAULT_SAMPLE_RATE 2048000
+#define DEFAULT_BUF_LENGTH (16 * 16384)
+#define MINIMAL_BUF_LENGTH 512
+#define MAXIMAL_BUF_LENGTH (256 * 16384)
+
+static int do_exit = 0;
+static uint32_t bytes_to_read = 0;
+static rtlsdr_dev_t *dev = NULL;
+
 static bool stopped_analize = false;
 
 bool is_group;
@@ -716,4 +736,126 @@ void TestDialog::on_buttonRemoveTransponder_clicked() {
 
 void TestDialog::on_checkBoxFast_stateChanged(int arg1) {
   is_fast_lock = ui->checkBoxFast->isChecked();
+}
+
+static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
+  if (ctx) {
+    if (do_exit)
+      return;
+
+    if ((bytes_to_read > 0) && (bytes_to_read < len)) {
+      len = bytes_to_read;
+      do_exit = 1;
+      rtlsdr_cancel_async(dev);
+    }
+
+    if (fwrite(buf, 1, len, (FILE *)ctx) != len) {
+      fprintf(stderr, "Short write, samples lost, exiting!\n");
+      rtlsdr_cancel_async(dev);
+    }
+
+    if (bytes_to_read > 0)
+      bytes_to_read -= len;
+  }
+}
+
+void TestDialog::on_buttonObtainData_clicked() {
+  // obtain data from rtl-sdr or file?
+  char filename[250];
+  int n_read;
+  int r, opt;
+  int gain = 0;
+  int ppm_error = 0;
+  int sync_mode = 0;
+  FILE *file;
+  uint8_t *buffer;
+  int dev_index = 0;
+  int dev_given = 0;
+  uint32_t frequency = 522000000;
+  uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
+  uint32_t out_block_size = 8000000; /*DEFAULT_BUF_LENGTH;*/
+  strcpy(filename, "~/rtl.iq");
+  bytes_to_read = 200000;
+  buffer = (uint8_t *)malloc(out_block_size * sizeof(uint8_t));
+
+  if (!dev_given) {
+    dev_index = verbose_device_search("0");
+  }
+
+  if (dev_index < 0) {
+    exit(1);
+  }
+
+  r = rtlsdr_open(&dev, (uint32_t)dev_index);
+  if (r < 0) {
+    qDebug() << "Failed to open rtlsdr device!\n";
+    return;
+  }
+
+  /* Set the sample rate */
+  verbose_set_sample_rate(dev, samp_rate);
+
+  /* Set the frequency */
+  verbose_set_frequency(dev, frequency);
+
+  if (0 == gain) {
+    /* Enable automatic gain */
+    verbose_auto_gain(dev);
+  } else {
+    /* Enable manual gain */
+    gain = nearest_gain(dev, gain);
+    verbose_gain_set(dev, gain);
+  }
+
+  verbose_ppm_set(dev, ppm_error);
+
+  file = fopen(filename, "wb");
+  if (!file) {
+    qDebug() << "Failed to open " << filename << "/n";
+    goto out;
+  }
+
+  /* Reset endpoint before we start reading from it (mandatory) */
+  verbose_reset_buffer(dev);
+
+  if (sync_mode) {
+    fprintf(stderr, "Reading samples in sync mode...\n");
+    while (!do_exit) {
+      r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
+      if (r < 0) {
+        qDebug() << "WARNING: sync read failed.\n";
+        break;
+      }
+
+      if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
+        n_read = bytes_to_read;
+        do_exit = 1;
+      }
+
+      if (fwrite(buffer, 1, n_read, file) != (size_t)n_read) {
+        qDebug() << "Short write, samples lost, exiting!\n";
+        break;
+      }
+
+      if ((uint32_t)n_read < out_block_size) {
+        qDebug() << "Short read, samples lost, exiting!\n";
+        break;
+      }
+
+      if (bytes_to_read > 0)
+        bytes_to_read -= n_read;
+    }
+  } else {
+    qDebug() << "Reading samples in async mode...\n";
+    r = rtlsdr_read_async(dev, rtlsdr_callback, (void *)file, 0,
+                          out_block_size);
+  }
+
+  if (file)
+    fclose(file);
+
+  rtlsdr_close(dev);
+  free(buffer);
+out:
+  return;
 }

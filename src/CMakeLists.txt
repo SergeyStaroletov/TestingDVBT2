@@ -165,7 +165,6 @@ if(HAVE_DVB)
       dvbtest/omap/mapwidget/waypointitem.cpp
       dvbtest/plot/qcustomplot.cpp
       dvbtest/plot/qcustomplot.h
-      dvbtest/rtl_sdr/rtl_sdr.c
       dvbtest/rtl_sdr/rtlsdr_static_export.h
       dvbtest/rtl_sdr/tuner_fc0012.c
       dvbtest/rtl_sdr/tuner_fc2580.c
@@ -174,7 +173,7 @@ if(HAVE_DVB)
       dvbtest/rtl_sdr/tuner_e4k.c
       dvbtest/rtl_sdr/tuner_fc0013.c
       dvbtest/rtl_sdr/tuner_r82xx.c
-      dvbtest/rtl_sdr/convenience/convenience.c
+      dvbtest/rtl_sdr/convenience/convenience.cpp
       dvbtest/glwidget/glwidget.cpp
       dvbtest/glwidget/glwidget.h
       dvbtest/glwidget/window.cpp

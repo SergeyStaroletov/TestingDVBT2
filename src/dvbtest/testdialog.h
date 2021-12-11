@@ -38,6 +38,8 @@ private slots:
 
   void on_checkBoxFast_stateChanged(int arg1);
 
+  void on_buttonObtainData_clicked();
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;

@@ -17,6 +17,8 @@
 
 /* a collection of user friendly tools */
 
+#include "dvbtest/rtl_sdr/include/rtl-sdr.h"
+
 /*!
  * Convert standard suffixes (k, M, G) to double
  *
@@ -113,7 +115,8 @@ int verbose_auto_gain(rtlsdr_dev_t *dev);
 int verbose_gain_set(rtlsdr_dev_t *dev, int gain);
 
 /*!
- * Set the frequency correction value for the device and report status on stderr.
+ * Set the frequency correction value for the device and report status on
+ * stderr.
  *
  * \param dev the device handle given by rtlsdr_open()
  * \param ppm_error correction value in parts per million (ppm)
@@ -139,4 +142,3 @@ int verbose_reset_buffer(rtlsdr_dev_t *dev);
  */
 
 int verbose_device_search(char *s);
-
