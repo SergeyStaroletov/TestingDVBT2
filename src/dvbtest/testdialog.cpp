@@ -774,7 +774,7 @@ void TestDialog::on_buttonObtainData_clicked() {
   uint32_t frequency = 522000000;
   uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
   uint32_t out_block_size = 8000000; /*DEFAULT_BUF_LENGTH;*/
-  strcpy(filename, "~/rtl.iq");
+  strcpy(filename, "/tmp/rtl.iq");
   bytes_to_read = 200000;
   buffer = (uint8_t *)malloc(out_block_size * sizeof(uint8_t));
 
@@ -811,14 +811,14 @@ void TestDialog::on_buttonObtainData_clicked() {
 
   file = fopen(filename, "wb");
   if (!file) {
-    qDebug() << "Failed to open " << filename << "/n";
+    qDebug() << "Failed to open " << filename << "\n";
     goto out;
   }
 
   /* Reset endpoint before we start reading from it (mandatory) */
   verbose_reset_buffer(dev);
 
-  if (sync_mode) {
+  if (true) {
     fprintf(stderr, "Reading samples in sync mode...\n");
     while (!do_exit) {
       r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
