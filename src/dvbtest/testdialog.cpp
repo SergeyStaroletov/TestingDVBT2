@@ -738,27 +738,6 @@ void TestDialog::on_checkBoxFast_stateChanged(int arg1) {
   is_fast_lock = ui->checkBoxFast->isChecked();
 }
 
-static void rtlsdr_callback(unsigned char *buf, uint32_t len, void *ctx) {
-  if (ctx) {
-    if (do_exit)
-      return;
-
-    if ((bytes_to_read > 0) && (bytes_to_read < len)) {
-      len = bytes_to_read;
-      do_exit = 1;
-      rtlsdr_cancel_async(dev);
-    }
-
-    if (fwrite(buf, 1, len, (FILE *)ctx) != len) {
-      fprintf(stderr, "Short write, samples lost, exiting!\n");
-      rtlsdr_cancel_async(dev);
-    }
-
-    if (bytes_to_read > 0)
-      bytes_to_read -= len;
-  }
-}
-
 void TestDialog::on_buttonObtainData_clicked() {
   // obtain data from rtl-sdr or file?
   char filename[250];
@@ -818,37 +797,31 @@ void TestDialog::on_buttonObtainData_clicked() {
   /* Reset endpoint before we start reading from it (mandatory) */
   verbose_reset_buffer(dev);
 
-  if (true) {
-    fprintf(stderr, "Reading samples in sync mode...\n");
-    while (!do_exit) {
-      r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
-      if (r < 0) {
-        qDebug() << "WARNING: sync read failed.\n";
-        break;
-      }
-
-      if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
-        n_read = bytes_to_read;
-        do_exit = 1;
-      }
-
-      if (fwrite(buffer, 1, n_read, file) != (size_t)n_read) {
-        qDebug() << "Short write, samples lost, exiting!\n";
-        break;
-      }
-
-      if ((uint32_t)n_read < out_block_size) {
-        qDebug() << "Short read, samples lost, exiting!\n";
-        break;
-      }
-
-      if (bytes_to_read > 0)
-        bytes_to_read -= n_read;
+  fprintf(stderr, "Reading samples in sync mode...\n");
+  while (!do_exit) {
+    r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
+    if (r < 0) {
+      qDebug() << "WARNING: sync read failed.\n";
+      break;
     }
-  } else {
-    qDebug() << "Reading samples in async mode...\n";
-    r = rtlsdr_read_async(dev, rtlsdr_callback, (void *)file, 0,
-                          out_block_size);
+
+    if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
+      n_read = bytes_to_read;
+      do_exit = 1;
+    }
+
+    if (fwrite(buffer, 1, n_read, file) != (size_t)n_read) {
+      qDebug() << "Short write, samples lost, exiting!\n";
+      break;
+    }
+
+    if ((uint32_t)n_read < out_block_size) {
+      qDebug() << "Short read, samples lost, exiting!\n";
+      break;
+    }
+
+    if (bytes_to_read > 0)
+      bytes_to_read -= n_read;
   }
 
   if (file)
