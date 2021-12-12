@@ -4,6 +4,7 @@
 #include "window.h"
 #include <KLocalizedString>
 #include <QDebug>
+#include <QMutex>
 #include <QThread>
 
 #include <dvb/dvbbackenddevice.h>
@@ -30,10 +31,6 @@
 #define DEFAULT_BUF_LENGTH (16 * 16384)
 #define MINIMAL_BUF_LENGTH 512
 #define MAXIMAL_BUF_LENGTH (256 * 16384)
-
-static int do_exit = 0;
-static uint32_t bytes_to_read = 0;
-static rtlsdr_dev_t *dev = NULL;
 
 static bool stopped_analize = false;
 
@@ -738,97 +735,100 @@ void TestDialog::on_checkBoxFast_stateChanged(int arg1) {
   is_fast_lock = ui->checkBoxFast->isChecked();
 }
 
-void TestDialog::on_buttonObtainData_clicked() {
-  // obtain data from rtl-sdr or file?
-  char filename[250];
-  int n_read;
-  int r, opt;
-  int gain = 0;
-  int ppm_error = 0;
-  int sync_mode = 0;
-  FILE *file;
-  uint8_t *buffer;
-  int dev_index = 0;
-  int dev_given = 0;
-  uint32_t frequency = 522000000;
-  uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
-  uint32_t out_block_size = 8000000; /*DEFAULT_BUF_LENGTH;*/
-  strcpy(filename, "/tmp/rtl.iq");
-  bytes_to_read = 200000;
-  buffer = (uint8_t *)malloc(out_block_size * sizeof(uint8_t));
+class RTLFetcherThread : public QThread {
 
-  if (!dev_given) {
-    dev_index = verbose_device_search("0");
-  }
+public:
+  RTLFetcherThread(uint32_t freq, char *buf, uint32_t *buf_size,
+                   bool *should_die, QMutex *sem_buf)
+      : freq(freq), buf(buf), sem_buf(sem_buf), buf_size(buf_size),
+        should_die(should_die) {}
 
-  if (dev_index < 0) {
-    exit(1);
-  }
+  bool setup() {
+    uint32_t samp_rate = DEFAULT_SAMPLE_RATE;
+    int gain = 0;
+    int ppm_error = 0;
+    int dev_index = verbose_device_search("0");
 
-  r = rtlsdr_open(&dev, (uint32_t)dev_index);
-  if (r < 0) {
-    qDebug() << "Failed to open rtlsdr device!\n";
-    return;
-  }
+    if (dev_index < 0) {
+      return false;
+    }
 
-  /* Set the sample rate */
-  verbose_set_sample_rate(dev, samp_rate);
-
-  /* Set the frequency */
-  verbose_set_frequency(dev, frequency);
-
-  if (0 == gain) {
-    /* Enable automatic gain */
-    verbose_auto_gain(dev);
-  } else {
-    /* Enable manual gain */
-    gain = nearest_gain(dev, gain);
-    verbose_gain_set(dev, gain);
-  }
-
-  verbose_ppm_set(dev, ppm_error);
-
-  file = fopen(filename, "wb");
-  if (!file) {
-    qDebug() << "Failed to open " << filename << "\n";
-    goto out;
-  }
-
-  /* Reset endpoint before we start reading from it (mandatory) */
-  verbose_reset_buffer(dev);
-
-  fprintf(stderr, "Reading samples in sync mode...\n");
-  while (!do_exit) {
-    r = rtlsdr_read_sync(dev, buffer, out_block_size, &n_read);
+    int r = rtlsdr_open(&dev, (uint32_t)dev_index);
     if (r < 0) {
-      qDebug() << "WARNING: sync read failed.\n";
-      break;
+      qDebug() << "Failed to open rtlsdr device!\n";
+      return false;
     }
-
-    if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
-      n_read = bytes_to_read;
-      do_exit = 1;
+    /* Set the sample rate */
+    verbose_set_sample_rate(dev, samp_rate);
+    /* Set the frequency */
+    verbose_set_frequency(dev, freq);
+    if (0 == gain) {
+      /* Enable automatic gain */
+      verbose_auto_gain(dev);
+    } else {
+      /* Enable manual gain */
+      gain = nearest_gain(dev, gain);
+      verbose_gain_set(dev, gain);
     }
+    verbose_ppm_set(dev, ppm_error);
+    /* Reset endpoint before we start reading from it (mandatory) */
+    verbose_reset_buffer(dev);
 
-    if (fwrite(buffer, 1, n_read, file) != (size_t)n_read) {
-      qDebug() << "Short write, samples lost, exiting!\n";
-      break;
-    }
-
-    if ((uint32_t)n_read < out_block_size) {
-      qDebug() << "Short read, samples lost, exiting!\n";
-      break;
-    }
-
-    if (bytes_to_read > 0)
-      bytes_to_read -= n_read;
+    return true;
   }
 
-  if (file)
-    fclose(file);
+  virtual void run() {
 
-  rtlsdr_close(dev);
-  free(buffer);
-out:
+    int n_read;
+    uint32_t out_block_size = 8000000; /*DEFAULT_BUF_LENGTH;*/
+
+    char *buf_small = (char *)malloc(out_block_size * 2);
+    int current_pos = 0;
+
+    *should_die = 0;
+
+    while (!(*should_die)) {
+
+      int r = rtlsdr_read_sync(dev, buf_small, out_block_size, &n_read);
+      if (r < 0) {
+        qDebug() << "WARNING: sync read failed.\n";
+        break;
+      }
+
+      if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
+        n_read = bytes_to_read;
+        *should_die = 1;
+      }
+
+      // we got n_read bytes = append to the buffer
+      memccpy(buf, buf_small, current_pos, n_read);
+      current_pos += n_read;
+
+      if ((uint32_t)n_read < out_block_size) {
+        qDebug() << "Short read, samples lost, exiting!\n";
+        break;
+      }
+
+      if (bytes_to_read > 0)
+        bytes_to_read -= n_read;
+    }
+
+    rtlsdr_close(dev);
+    free(buf_small);
+  }
+
+private:
+  uint32_t freq;
+  char *buf;
+  uint32_t *buf_size;
+  bool *should_die;
+  QMutex *sem_buf;
+  int do_exit = 0;
+  uint32_t bytes_to_read = 0;
+  rtlsdr_dev_t *dev = NULL;
+};
+
+void TestDialog::on_buttonObtainData_clicked() {
+  //
   return;
 }

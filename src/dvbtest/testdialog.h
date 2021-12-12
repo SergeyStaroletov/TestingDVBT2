@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QLabel>
+#include <QSemaphore>
 #include <dvb/dvbbackenddevice.h>
 #include <dvb/dvbmanager.h>
 
@@ -49,6 +50,8 @@ private:
   double max_found_snr;
   double min_found_snr;
   bool is_fast_lock;
+  char *iq_buffer;
+  QSemaphore sem_buffer;
 };
 
 class DvbGradProgress2 : public QLabel {
