@@ -787,34 +787,46 @@ public:
     uint32_t out_block_size = 8000000; /*DEFAULT_BUF_LENGTH;*/
 
     char *buf_small = (char *)malloc(out_block_size * 2);
-    int current_pos = 0;
 
     *should_die = 0;
 
+    // a transaction to obtain data from the rtl device
     while (!(*should_die)) {
 
-      int r = rtlsdr_read_sync(dev, buf_small, out_block_size, &n_read);
-      if (r < 0) {
-        qDebug() << "WARNING: sync read failed.\n";
-        break;
+      sem_buf->lock();
+      int current_pos = 0;
+
+      while (true) { // until we fail or get a desired size
+
+        int r = rtlsdr_read_sync(dev, buf_small, out_block_size, &n_read);
+        if (r < 0) {
+          qDebug() << "WARNING: sync read failed.\n";
+          break;
+        }
+
+        if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
+          n_read = bytes_to_read;
+          *should_die = 1;
+        }
+
+        // we got n_read bytes = append to the buffer
+        memccpy(buf, buf_small, current_pos, n_read);
+        current_pos += n_read;
+
+        if ((uint32_t)n_read < out_block_size) {
+          qDebug() << "Short read, samples lost, exiting!\n";
+          break;
+        }
+
+        if (bytes_to_read > 0)
+          bytes_to_read -= n_read;
       }
+      *this->buf_size = current_pos;
 
-      if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
-        n_read = bytes_to_read;
-        *should_die = 1;
-      }
+      qDebug() << "We got buffer with size " << current_pos
+               << " from the device...\n";
 
-      // we got n_read bytes = append to the buffer
-      memccpy(buf, buf_small, current_pos, n_read);
-      current_pos += n_read;
-
-      if ((uint32_t)n_read < out_block_size) {
-        qDebug() << "Short read, samples lost, exiting!\n";
-        break;
-      }
-
-      if (bytes_to_read > 0)
-        bytes_to_read -= n_read;
+      sem_buf->unlock();
     }
 
     rtlsdr_close(dev);
