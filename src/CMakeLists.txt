@@ -174,6 +174,8 @@ if(HAVE_DVB)
       dvbtest/rtl_sdr/tuner_fc0013.c
       dvbtest/rtl_sdr/tuner_r82xx.c
       dvbtest/rtl_sdr/convenience/convenience.cpp
+      dvbtest/rtlfetcherthread.cpp
+      dvbtest/rtlfetcherthread.h
       dvbtest/glwidget/glwidget.cpp
       dvbtest/glwidget/glwidget.h
       dvbtest/glwidget/window.cpp
