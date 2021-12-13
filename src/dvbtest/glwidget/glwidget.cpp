@@ -5,7 +5,7 @@
  ** Based on the qt gl widget (C) 2016 The Qt Company Ltd.
  ** Contact: https://www.qt.io/licensing/
  **
- ** This file is part of the examples of the Qt Toolkit.
+ ** This file was part of the examples of the Qt Toolkit.
  **
  ** $QT_BEGIN_LICENSE:BSD$
  ****************************************************************************/
@@ -86,6 +86,129 @@ void GLWidget::cleanup() {
   delete m_program;
   m_program = 0;
   doneCurrent();
+}
+
+void GLWidget::setData(unsigned char *buf, uint32_t buf_size) {
+
+  iq.resize(buf_size);
+  memcpy((char *)(this->iq.data()), buf, buf_size);
+
+  collectPoints();
+  update();
+}
+
+void GLWidget::collectPoints() {
+
+  float max = 0.4;
+  int q = 256;
+  int q4 = sqrt(q / 4);
+  float one = max / q4;
+
+  // prepare points - qam centers
+  for (int x = 0; x < q4; x++)
+    for (int y = 0; y < q4; y++) {
+      ComplexNumber c;
+      c.real(one / 2 + x * one);
+      c.imag(one / 2 + y * one);
+      qams.push_back(c);
+
+      c.real(-x * one - one / 2);
+      c.imag(one / 2 + y * one);
+      qams.push_back(c);
+
+      c.real(one / 2 + x * one);
+      c.imag(-y * one - one / 2);
+      qams.push_back(c);
+
+      c.real(-x * one - one / 2);
+      c.imag(-y * one - one / 2);
+      qams.push_back(c);
+    }
+
+  std::vector<ComplexNumber> Z;
+
+  for (int i = 0; i < iq.size() / 5 - 2; i += 2) {
+    unsigned char I = iq.at(i);
+    unsigned char Q = iq.at(i + 1);
+    float pI = I - 127.5;
+    float pQ = Q - 127.5;
+
+    ComplexNumber z;
+    z.real(pI / 127.5 * max);
+    z.imag(pQ / 127.5 * max);
+
+    Z.push_back(z);
+  }
+
+  std::vector<ComplexNumber> X;
+
+  R.clear();
+
+  X = Z;
+
+  const int B = 10;
+  double PI = std::acos(-1);
+
+  float D[Z.size()][B];
+  float S[Z.size()][B];
+  ComplexNumber Xz[Z.size()][B];
+
+  int N = 10;
+
+  for (int b = 0; b < B; b++) {
+    float PhiB = 1.0 * b / B * PI / 2;
+    for (int k = 0; k < Z.size(); k++) {
+      ComplexNumber e = 0;
+      e.imag(PhiB);
+      ComplexNumber z1 = Z[k] * std::exp(e);
+      // decision search
+
+      // ComplexNumber Xz;
+      // find a nearest qam point
+      float min = 999;
+      int minPos = 0;
+      for (int q = 0; q < qams.size(); q++) {
+        float nor = norm(qams[q] - z1);
+        nor = nor * nor;
+        if (nor < min) {
+          min = nor;
+          minPos = q;
+        }
+      }
+      Xz[k][b] = z1; // qams[minPos];
+      D[k][b] = min;
+      // printf("%f\n", min);
+    }
+    for (int k = N; k < Z.size() - N; k++) {
+      float s = 0;
+      for (int n = -N; n <= N; n++)
+        s += D[k - n][b];
+      S[k][b] = s;
+    }
+  }
+
+  int snrS = 0;
+  int snrN = 0;
+  for (int k = N; k < Z.size() - 2 * N; k++) {
+    float min = 999;
+    int minb = 0;
+    for (int b = 0; b < B; b++)
+      if (S[k][b] < min) {
+        min = S[k][b];
+        minb = b;
+      }
+    // X [k][minb] = solution
+    for (int b = 0; b < B; b++)
+
+      if (is_group) {
+        if (D[k][b] < 0.0000002) {
+          R.push_back(Xz[k][b]);
+          snrS++;
+        } // else snrN++;
+      } else {
+        R.push_back(Xz[k][b]);
+      }
+  }
 }
 
 static const char *vertexShaderSourceCore =
@@ -266,119 +389,6 @@ void GLWidget::initializeGL() {
   fclose(f);
 
   iq = iqq;
-
-  // test for filling buffer data to draw alter
-
-  float max = 0.4;
-  int q = 256;
-  int q4 = sqrt(q / 4);
-  float one = max / q4;
-
-  // prepare points - qam centers
-  for (int x = 0; x < q4; x++)
-    for (int y = 0; y < q4; y++) {
-      ComplexNumber c;
-      c.real(one / 2 + x * one);
-      c.imag(one / 2 + y * one);
-      qams.push_back(c);
-
-      c.real(-x * one - one / 2);
-      c.imag(one / 2 + y * one);
-      qams.push_back(c);
-
-      c.real(one / 2 + x * one);
-      c.imag(-y * one - one / 2);
-      qams.push_back(c);
-
-      c.real(-x * one - one / 2);
-      c.imag(-y * one - one / 2);
-      qams.push_back(c);
-    }
-
-  std::vector<ComplexNumber> Z;
-
-  for (int i = 0; i < iq.size() / 5 - 2; i += 2) {
-    unsigned char I = iq.at(i);
-    unsigned char Q = iq.at(i + 1);
-    float pI = I - 127.5;
-    float pQ = Q - 127.5;
-
-    ComplexNumber z;
-    z.real(pI / 127.5 * max);
-    z.imag(pQ / 127.5 * max);
-
-    Z.push_back(z);
-  }
-
-  std::vector<ComplexNumber> X;
-
-  R.clear();
-
-  X = Z;
-
-  const int B = 10;
-  double PI = std::acos(-1);
-
-  float D[Z.size()][B];
-  float S[Z.size()][B];
-  ComplexNumber Xz[Z.size()][B];
-
-  int N = 10;
-
-  for (int b = 0; b < B; b++) {
-    float PhiB = 1.0 * b / B * PI / 2;
-    for (int k = 0; k < Z.size(); k++) {
-      ComplexNumber e = 0;
-      e.imag(PhiB);
-      ComplexNumber z1 = Z[k] * std::exp(e);
-      // decision search
-
-      // ComplexNumber Xz;
-      // find a nearest qam point
-      float min = 999;
-      int minPos = 0;
-      for (int q = 0; q < qams.size(); q++) {
-        float nor = norm(qams[q] - z1);
-        nor = nor * nor;
-        if (nor < min) {
-          min = nor;
-          minPos = q;
-        }
-      }
-      Xz[k][b] = z1; // qams[minPos];
-      D[k][b] = min;
-      // printf("%f\n", min);
-    }
-    for (int k = N; k < Z.size() - N; k++) {
-      float s = 0;
-      for (int n = -N; n <= N; n++)
-        s += D[k - n][b];
-      S[k][b] = s;
-    }
-  }
-
-  int snrS = 0;
-  int snrN = 0;
-  for (int k = N; k < Z.size() - 2 * N; k++) {
-    float min = 999;
-    int minb = 0;
-    for (int b = 0; b < B; b++)
-      if (S[k][b] < min) {
-        min = S[k][b];
-        minb = b;
-      }
-    // X [k][minb] = solution
-    for (int b = 0; b < B; b++)
-
-      if (is_group) {
-        if (D[k][b] < 0.0000002) {
-          R.push_back(Xz[k][b]);
-          snrS++;
-        } // else snrN++;
-      } else {
-        R.push_back(Xz[k][b]);
-      }
-  }
 }
 
 void GLWidget::setupVertexAttribs() {
