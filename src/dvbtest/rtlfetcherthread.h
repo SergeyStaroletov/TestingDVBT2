@@ -21,8 +21,13 @@
 #define BUF_RTL_SIZE 2000000
 
 class RTLFetcherThread : public QThread {
+  Q_OBJECT
+
+signals:
+  void newDataSignal(unsigned char *buf, int size);
+
 public:
-  RTLFetcherThread(uint32_t freq, char *buf, uint32_t *buf_size,
+  RTLFetcherThread(uint32_t freq, unsigned char *buf, uint32_t *buf_size,
                    bool *should_die, QMutex *sem_buf)
       : freq(freq), buf(buf), sem_buf(sem_buf), buf_size(buf_size),
         should_die(should_die) {}
@@ -33,7 +38,7 @@ public:
 
 private:
   uint32_t freq;
-  char *buf;
+  unsigned char *buf;
   uint32_t *buf_size;
   bool *should_die;
   QMutex *sem_buf;

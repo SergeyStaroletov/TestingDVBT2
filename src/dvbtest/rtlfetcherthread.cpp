@@ -83,6 +83,9 @@ void RTLFetcherThread::run() {
              << " from the device...\n";
 
     sem_buf->unlock();
+    // test
+    emit newDataSignal(this->buf, current_pos);
+    QThread::currentThread()->msleep(1000);
   }
 
   rtlsdr_close(dev);

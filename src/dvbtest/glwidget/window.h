@@ -61,28 +61,28 @@ QT_END_NAMESPACE
 
 class GLWidget;
 
-class Window : public QWidget
-{
-    Q_OBJECT
+class Window : public QWidget {
+  Q_OBJECT
 
 public:
-    Window(QWidget *mw);
+  Window(QWidget *mw);
+  GLWidget *getGlWidget() { return glWidget; }
 
 protected:
-    void keyPressEvent(QKeyEvent *event) override;
+  void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
-    void dockUndock();
+  void dockUndock();
 
 private:
-    QSlider *createSlider();
+  QSlider *createSlider();
 
-    GLWidget *glWidget;
-    QSlider *xSlider;
-    QSlider *ySlider;
-    QSlider *zSlider;
-    QPushButton *dockBtn;
-    QWidget *mainWindow;
+  GLWidget *glWidget;
+  QSlider *xSlider;
+  QSlider *ySlider;
+  QSlider *zSlider;
+  QPushButton *dockBtn;
+  QWidget *mainWindow;
 };
 
 #endif

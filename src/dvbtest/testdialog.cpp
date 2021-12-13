@@ -1,4 +1,5 @@
 #include "testdialog.h"
+#include "glwidget.h"
 #include "qcustomplot.h"
 #include "ui_testdialog.h"
 #include "window.h"
@@ -103,7 +104,7 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   this->manager = manager;
   this->num_graphs = -1;
 
-  this->iq_buffer = new char[BUF_RTL_SIZE];
+  this->iq_buffer = new unsigned char[BUF_RTL_SIZE];
   this->iq_buffer_len = 0;
 
   this->max_found_snr = -1;
@@ -176,7 +177,9 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   // OpenGL Widget
 
   QGridLayout *layout = new QGridLayout(ui->widgetView);
-  layout->addWidget(new Window(ui->widgetView));
+  Window *w = new Window(ui->widgetView);
+  this->glWidget = w->getGlWidget();
+  layout->addWidget(w);
 }
 
 TestDialog::~TestDialog() { delete ui; }
@@ -733,9 +736,13 @@ void TestDialog::on_buttonObtainData_clicked() {
       new RTLFetcherThread(freqi, this->iq_buffer, &this->iq_buffer_len,
                            &stopped_analize, &this->sem_buffer);
   if (!thread->setup()) {
-
     return;
   }
+  //  connect(xSlider, &QSlider::valueChanged, glWidget,
+  //  &GLWidget::setXRotation);
+
+  connect(thread, &RTLFetcherThread::newDataSignal, glWidget,
+          &GLWidget::setData);
   thread->start();
 
   return;

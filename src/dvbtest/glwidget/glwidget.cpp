@@ -88,11 +88,13 @@ void GLWidget::cleanup() {
   doneCurrent();
 }
 
-void GLWidget::setData(unsigned char *buf, uint32_t buf_size) {
+void GLWidget::setData(unsigned char *buf, int buf_size) {
 
+  qDebug() << "we got a request of new data size = " << buf_size << "\n";
   iq.resize(buf_size);
-  memcpy((char *)(this->iq.data()), buf, buf_size);
+  memcpy((unsigned char *)(this->iq.data()), buf, buf_size);
 
+  iq.resize(20000);
   collectPoints();
   update();
 }

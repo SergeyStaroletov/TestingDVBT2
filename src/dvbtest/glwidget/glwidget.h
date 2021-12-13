@@ -82,7 +82,7 @@ public slots:
   void setYRotation(int angle);
   void setZRotation(int angle);
   void cleanup();
-  void setData(unsigned char *buf, uint32_t buf_size);
+  void setData(unsigned char *buf, int buf_size);
   void collectPoints();
 
 signals:

@@ -1,6 +1,7 @@
 #ifndef TESTDIALOG_H
 #define TESTDIALOG_H
 
+#include "glwidget.h"
 #include <QDialog>
 #include <QLabel>
 #include <QMutex>
@@ -54,9 +55,10 @@ private:
   double max_found_snr;
   double min_found_snr;
   bool is_fast_lock;
-  char *iq_buffer;
+  unsigned char *iq_buffer;
   uint32_t iq_buffer_len;
   QMutex sem_buffer;
+  GLWidget *glWidget;
 };
 
 class DvbGradProgress2 : public QLabel {
