@@ -49,8 +49,10 @@ void RTLFetcherThread::run() {
 
     sem_buf->lock();
     int current_pos = 0;
+    bytes_to_read = 2000000;
 
-    while (true) { // until we fail or get a desired size
+    bool need_fin = false;
+    while (!need_fin) { // until we fail or get a desired size
 
       int r = rtlsdr_read_sync(dev, buf_small, out_block_size, &n_read);
       if (r < 0) {
@@ -60,7 +62,7 @@ void RTLFetcherThread::run() {
 
       if ((bytes_to_read > 0) && (bytes_to_read < (uint32_t)n_read)) {
         n_read = bytes_to_read;
-        *should_die = 1;
+        need_fin = true;
       }
 
       // we got n_read bytes = append to the buffer
