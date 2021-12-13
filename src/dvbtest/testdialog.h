@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include <QLabel>
-#include <QSemaphore>
+#include <QMutex>
 #include <dvb/dvbbackenddevice.h>
 #include <dvb/dvbmanager.h>
 
@@ -41,6 +41,10 @@ private slots:
 
   void on_buttonObtainData_clicked();
 
+  void on_tabWidget_currentChanged(int index);
+
+  void on_pushButtonStopRtl_clicked();
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;
@@ -51,7 +55,8 @@ private:
   double min_found_snr;
   bool is_fast_lock;
   char *iq_buffer;
-  QSemaphore sem_buffer;
+  uint32_t iq_buffer_len;
+  QMutex sem_buffer;
 };
 
 class DvbGradProgress2 : public QLabel {

@@ -31,6 +31,7 @@
 #define DEFAULT_BUF_LENGTH (16 * 16384)
 #define MINIMAL_BUF_LENGTH 512
 #define MAXIMAL_BUF_LENGTH (256 * 16384)
+#define BUF_RTL_SIZE 2000000
 
 static bool stopped_analize = false;
 
@@ -116,6 +117,9 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
 
   this->manager = manager;
   this->num_graphs = -1;
+
+  this->iq_buffer = new char[BUF_RTL_SIZE];
+  this->iq_buffer_len = 0;
 
   this->max_found_snr = -1;
   this->min_found_snr = 32768;
@@ -830,5 +834,30 @@ private:
 
 void TestDialog::on_buttonObtainData_clicked() {
   //
+  QString freq = ui->comboBoxConstellFreq->currentText();
+  int freqi = freq.toDouble() * 1000000;
+
+  RTLFetcherThread *thread =
+      new RTLFetcherThread(freqi, this->iq_buffer, &this->iq_buffer_len,
+                           &stopped_analize, &this->sem_buffer);
+  if (!thread->setup()) {
+
+    return;
+  }
+  thread->start();
+
   return;
 }
+
+void TestDialog::on_tabWidget_currentChanged(int index) {
+  // stop current work
+  stopped_analize = true;
+  // update transponders
+  ui->comboBoxConstellFreq->clear();
+  QTableWidget *table = ui->tableTranspondersList;
+  for (int r = 0; r < table->rowCount(); r++) {
+    ui->comboBoxConstellFreq->addItem(table->item(r, 0)->text());
+  }
+}
+
+void TestDialog::on_pushButtonStopRtl_clicked() { stopped_analize = true; }
