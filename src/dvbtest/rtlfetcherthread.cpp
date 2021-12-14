@@ -84,7 +84,7 @@ void RTLFetcherThread::run() {
 
     sem_buf->unlock();
     // test
-    emit newDataSignal(this->buf, current_pos);
+    emit newRawDataSignal(this->buf, current_pos);
     QThread::currentThread()->msleep(1000);
   }
 

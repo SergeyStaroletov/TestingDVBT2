@@ -24,7 +24,7 @@ class RTLFetcherThread : public QThread {
   Q_OBJECT
 
 signals:
-  void newDataSignal(unsigned char *buf, int size);
+  void newRawDataSignal(unsigned char *buf, int size);
 
 public:
   RTLFetcherThread(uint32_t freq, unsigned char *buf, uint32_t *buf_size,

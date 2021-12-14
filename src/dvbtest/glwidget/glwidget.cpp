@@ -339,58 +339,6 @@ void GLWidget::initializeGL() {
 
   iq.clear();
   */
-
-  FILE *f = fopen(
-      "/home/sergey/Projects/dvb_data/TestPoint06/VV016-256QAM34_TP06_CSP.txt",
-      "r");
-
-  std::vector<unsigned char> iqq;
-
-#define MAX_LEN 256
-  char buffer[MAX_LEN];
-  int l = 0;
-  bool hex = false;
-  while (fgets(buffer, MAX_LEN - 1, f)) {
-    l++;
-    buffer[strcspn(buffer, "\n")] = 0;
-
-    if (buffer[0] != '#' && buffer[0] != '%') {
-
-      if (hex) {
-
-        for (int i = 0; i < strlen(buffer); i += 2) {
-          int b0 = buffer[i] - '0';
-          if (buffer[i] >= 'A' && buffer[i] <= 'F')
-            b0 = (buffer[i] - 'A') + 10;
-          int b1 = buffer[i + 1] - '0';
-          if (buffer[i + 1] >= 'A' && buffer[i + 1] <= 'F')
-            b1 = (buffer[i + 1] - 'A') + 10;
-          int b = 16 * b0 + b1;
-          // printf("%c%c=%d\n", buffer[i], buffer[i+1],b);
-          iqq.push_back((unsigned char)b);
-        }
-      } else {
-        for (int i = 0; i < strlen(buffer); i += 8) {
-          int b = 0;
-          int st = 128;
-          for (int j = 0; j <= 7; j++) {
-            int b1 = buffer[i + j] - '0';
-            if (buffer[i + j] >= 'A' && buffer[i + j] <= 'F')
-              b1 = (buffer[i + j] - 'A') + 10;
-            b = b + st * b1;
-            st = st / 2;
-          }
-          // printf("%c%c=%d\n", buffer[i], buffer[i+1],b);
-          iqq.push_back((unsigned char)b);
-        }
-      }
-
-    } else if (l > 10000)
-      break;
-  }
-  fclose(f);
-
-  iq = iqq;
 }
 
 void GLWidget::setupVertexAttribs() {

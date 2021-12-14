@@ -15,6 +15,9 @@ class TestDialog;
 class TestDialog : public QDialog {
   Q_OBJECT
 
+signals:
+  void newRawDataSignal(unsigned char *buf, int size);
+
 public:
   explicit TestDialog(QWidget *parent, DvbManager *manager);
   ~TestDialog();
@@ -46,6 +49,8 @@ private slots:
 
   void on_pushButtonStopRtl_clicked();
 
+  void on_comboBoxConstellRefStream_activated(const QString &arg1);
+
 private:
   Ui::TestDialog *ui;
   DvbManager *manager;
@@ -59,6 +64,7 @@ private:
   uint32_t iq_buffer_len;
   QMutex sem_buffer;
   GLWidget *glWidget;
+  std::vector<unsigned char> iq_data;
 };
 
 class DvbGradProgress2 : public QLabel {
