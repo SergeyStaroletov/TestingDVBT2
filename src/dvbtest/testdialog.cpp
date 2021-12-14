@@ -175,11 +175,20 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   max_found_sig = 0.0118816;
 
   // OpenGL Widget
-
   QGridLayout *layout = new QGridLayout(ui->widgetView);
   Window *w = new Window(ui->widgetView);
   this->glWidget = w->getGlWidget();
   layout->addWidget(w);
+
+  // reference transponders
+  QDir directory(QDir::home().absolutePath() + "/dvbtest");
+  QStringList tests =
+      directory.entryList(QStringList() << "*.txt", QDir::Files);
+  ui->comboBoxConstellRefStream->clear();
+  ui->comboBoxConstellRefStream->addItem("");
+  for (QString reftest : tests) {
+    ui->comboBoxConstellRefStream->addItem(reftest);
+  }
 }
 
 TestDialog::~TestDialog() { delete ui; }
