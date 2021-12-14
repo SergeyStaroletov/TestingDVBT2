@@ -3,11 +3,11 @@ DVB-T2 Test Dialog based on Kaffeine
 
 Original player code forked from <a href="https://github.com/KDE/kaffeine">Kaffeine KDE project</a>
 
-Integrates Qt plot widget, GIS map from the Mission Planner project, and RTL-SDR. See <a href = "src/dvbtest">src/dvbtest</a>
+Integrates Qt plot widget, GIS map from the Mission Planner project, and RTL-SDR using CMake See <a href = "src/dvbtest">src/dvbtest</a>
 
-It uses Kaffeine classes to work with transponders and a DVB card (tested only with Astrometa/Sony). 
+It uses Kaffeine classes to work with signal level, transponders and a DVB card (tested only with Astrometa/Sony). 
 
-It can constantly show signal strench/quality, scan spectrum, draw a map with points and visualize constellations.
+It can constantly show signal strench/quality, scan spectrum, draw a map with points and visualize constellations in OpenGL.
 
 !!Currently source state works only in a demo mode!!
 
