@@ -379,7 +379,7 @@ void GLWidget::paintGL() {
   glVertex2f(0.0f, 1.0f);
   glEnd();
 
-  m_program->setUniformValue("my_color", QVector3D(0.0, 0.39, 0.0));
+  m_program->setUniformValue("my_color", QVector3D(0.0, 1, 0.0));
 
   float max = 0.4;
   int q = 256;
@@ -410,7 +410,7 @@ void GLWidget::paintGL() {
 
   glPointSize(2);
 
-  m_program->setUniformValue("my_color", QVector3D(0.39, 0.0, 0.0));
+  m_program->setUniformValue("my_color", QVector3D(1, 0.0, 0.0));
 
   // just draw all we prepared before
 
