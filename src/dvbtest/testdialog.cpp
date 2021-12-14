@@ -738,8 +738,8 @@ void TestDialog::on_buttonObtainData_clicked() {
   if (!thread->setup()) {
     return;
   }
-  //  connect(xSlider, &QSlider::valueChanged, glWidget,
-  //  &GLWidget::setXRotation);
+
+  this->ui->buttonObtainData->setEnabled(false);
 
   connect(thread, &RTLFetcherThread::newDataSignal, glWidget,
           &GLWidget::setData);
@@ -759,4 +759,8 @@ void TestDialog::on_tabWidget_currentChanged(int index) {
   }
 }
 
-void TestDialog::on_pushButtonStopRtl_clicked() { stopped_analize = true; }
+void TestDialog::on_pushButtonStopRtl_clicked() {
+  this->ui->buttonObtainData->setEnabled(true);
+
+  stopped_analize = true;
+}
