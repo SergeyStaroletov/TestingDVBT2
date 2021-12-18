@@ -23,3 +23,8 @@ For plotting, it uses QCustomPlot, a modern plotting widget for Qt by Emanuel Ei
 <img src = "dvb2.png" width = "50%" />
 <img src = "dvb3.png" width = "50%"/>
 <img src = "dvb4.png" width = "50%"/>
+
+```
+
+sudo apt install libudev-dev libkf5coreaddons-dev-bin libkf5coreaddons5 libvlc-dev gettext libkf5dbusaddons-dev libkf5solid-dev libkf5kio-dev libkf5xmlgui-dev libkf5windowsystem-dev libkf5i18n-dev libkf5coreaddons-dev libqt5opengl5-dev libqt5opengl5 libqt5x11extras5 libqt5x11extras5-dev libqt5svg5-dev qt5-image-formats-plugins install extra-cmake-modules
+```
