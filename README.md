@@ -6,7 +6,8 @@ Original player code forked from <a href="https://github.com/KDE/kaffeine">Kaffe
 Integrates:
 - Qt plot widget (<a href="https://gitlab.com/DerManu/QCustomPlot">QCustomPlot</a>) by Emanuel Eichhammer, 
 - GIS map from the Mission Planner project (QT sources), 
-- and RTL-SDR (included into src tree for a static linking, experimental as I want understand it) 
+- and RTL-SDR (included into src tree for a static linking, experimental as I want understand it). 
+
 All libs are collected here and now can be built together using CMake. All my sources are here: <a href = "src/dvbtest">src/dvbtest</a>.
 
 License: GPL. 
