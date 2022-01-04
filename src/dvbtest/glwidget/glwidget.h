@@ -120,6 +120,7 @@ private:
   std::vector<unsigned char> iq;
   std::vector<ComplexNumber> R;
   std::vector<ComplexNumber> qams;
+  int counter;
 };
 
 #endif

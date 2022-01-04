@@ -36,6 +36,7 @@ GLWidget::GLWidget(QWidget *parent)
     fmt.setAlphaBufferSize(8);
     setFormat(fmt);
   }
+  counter = 0;
 }
 
 GLWidget::~GLWidget() { cleanup(); }
@@ -94,9 +95,18 @@ void GLWidget::setData(unsigned char *buf, int buf_size) {
   iq.resize(buf_size);
   memcpy((unsigned char *)(this->iq.data()), buf, buf_size);
 
-  iq.resize(20000);
+  if (buf_size > 20000)
+    iq.resize(20000);
+
   collectPoints();
-  update();
+  if (buf_size > 11000) {
+    {
+      counter++;
+      // if (counter % 5 == 0)
+      update();
+    }
+  } else
+    update();
 }
 
 void GLWidget::collectPoints() {
@@ -144,7 +154,8 @@ void GLWidget::collectPoints() {
 
   std::vector<ComplexNumber> X;
 
-  R.clear();
+  if (counter % 5 == 0)
+    R.clear();
 
   X = Z;
 
@@ -323,22 +334,6 @@ void GLWidget::initializeGL() {
   m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
 
   m_program->release();
-
-  /*
-  std::ifstream file("/home/sergey/rtl-sdr/src/serg2.iq", std::ios::binary |
-  std::ios::ate); std::streamsize size = file.tellg(); file.seekg(0,
-  std::ios::beg);
-
-  //if (size > 100000) size = 100000;
-  iq.resize(size);
-  int n = 100000;
-
-  file.read(( char *)(this->iq.data()), size);
-
-  std::vector<unsigned char> iqq(iq.end() - n, iq.end());
-
-  iq.clear();
-  */
 }
 
 void GLWidget::setupVertexAttribs() {

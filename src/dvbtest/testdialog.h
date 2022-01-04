@@ -51,7 +51,14 @@ private slots:
 
   void on_comboBoxConstellRefStream_activated(const QString &arg1);
 
+  void on_pushButtonClear_clicked();
+
 private:
+  void LoadGPSPoints();
+  void SaveGPSPoints();
+  bool gps_table_changed;
+  QString DetectDVBCard(DvbDevice *device);
+
   Ui::TestDialog *ui;
   DvbManager *manager;
   int num_graphs;
