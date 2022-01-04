@@ -11,7 +11,7 @@ It can constantly show signal strench/quality, scan spectrum, draw a map with po
 
 !!Currently source state works only in a demo mode!!
 
-Presented at TELFOR 2021.
+Presented at TELFOR 2021. The paper on IEEE is <a href = "https://ieeexplore.ieee.org/document/9653329">here</a>.
 
 Please wait for updates.
 
