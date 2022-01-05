@@ -96,24 +96,24 @@ private:
   void run() { scan->start(); }
 };
 
-QString TestDialog::DetectDVBCard(DvbDevice *device) {
-  device = nullptr;
+QString TestDialog::DetectDVBCard(DvbDevice **device) {
+  *device = nullptr;
   QString card;
 
   if (manager->getDeviceConfigs().size() == 0)
     return "";
 
-  device = manager->getDeviceConfigs().at(1).device;
+  *device = manager->getDeviceConfigs().at(1).device;
   const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
   DvbConfig cfg;
   foreach (const DvbConfig &config, it.configs) {
     if (config->name == "Terrestrial (T2)") {
-      device = it.device;
-      if (!device)
+      *device = it.device;
+      if (!*device)
         return "";
-      device->acquire(config.constData());
+      (*device)->acquire(config.constData());
       cfg = config;
-      card = device->getFrontendName();
+      card = (*device)->getFrontendName();
       break;
     }
   }
@@ -228,7 +228,7 @@ TestDialog::~TestDialog() { delete ui; }
 void TestDialog::on_pushButton_clicked() {
   //
   DvbDevice *device;
-  this->DetectDVBCard(device);
+  this->DetectDVBCard(&device);
 
   if (device == NULL) {
     qDebug() << "No device!";
@@ -421,7 +421,7 @@ void TestDialog::on_pushButtonAnalize_clicked() {
       return;
 
     DvbDevice *device;
-    QString card = this->DetectDVBCard(device);
+    QString card = this->DetectDVBCard(&device);
 
     const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
 
@@ -554,7 +554,7 @@ void TestDialog::on_buttonStartLocking_clicked() {
   stopped_analize = false;
 
   DvbDevice *device;
-  QString card = this->DetectDVBCard(device);
+  QString card = this->DetectDVBCard(&device);
   ui->labelCard->setText(card);
 
   if (!device) {

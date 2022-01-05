@@ -57,7 +57,7 @@ private:
   void LoadGPSPoints();
   void SaveGPSPoints();
   bool gps_table_changed;
-  QString DetectDVBCard(DvbDevice *device);
+  QString DetectDVBCard(DvbDevice **device);
 
   Ui::TestDialog *ui;
   DvbManager *manager;
