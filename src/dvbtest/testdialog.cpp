@@ -97,18 +97,14 @@ private:
 };
 
 QString TestDialog::DetectDVBCard(DvbDevice *device) {
-
   device = nullptr;
-
   QString card;
 
   if (manager->getDeviceConfigs().size() == 0)
     return "";
 
   device = manager->getDeviceConfigs().at(1).device;
-
   const DvbDeviceConfig &it = manager->getDeviceConfigs().at(1);
-
   DvbConfig cfg;
   foreach (const DvbConfig &config, it.configs) {
     if (config->name == "Terrestrial (T2)") {
@@ -121,8 +117,59 @@ QString TestDialog::DetectDVBCard(DvbDevice *device) {
       break;
     }
   }
-
   return card;
+}
+
+void TestDialog::LoadGPSPoints() {
+  const QString fileName = QDir::home().absolutePath() + "/dvb_drive.csv";
+  if (QFile::exists(fileName)) {
+    FILE *f = fopen(fileName.toLocal8Bit(), "r");
+    QTableWidget *table = ui->tablePoints;
+
+    int r = 0;
+    while (!feof(f)) {
+      char buf[200];
+      memset(buf, 0, sizeof(buf));
+      fgets(buf, 200, f);
+      QString b = QString::fromLocal8Bit(buf);
+      QStringList lst = b.split(";");
+      if (lst.size() < 6)
+        continue;
+      QString dateStr = lst[0];
+      QString lat = lst[1];
+      QString lon = lst[2];
+      QString lock = lst[3];
+      QString sig = lst[4];
+      QString snr = lst[5];
+      sig = sig.replace(",", ".");
+      snr = snr.replace(",", ".");
+      double Snr = snr.toDouble();
+      double Sig = sig.toDouble();
+
+      Sig = 1 / fabs(Sig);
+      if (max_found_sig < Sig)
+        max_found_sig = Sig;
+      if (min_found_sig > Sig)
+        min_found_sig = Sig;
+
+      if (max_found_snr < Snr)
+        max_found_snr = Snr;
+      if (Snr != -1 && min_found_snr > Snr)
+        min_found_snr = Snr;
+
+      table->insertRow(r);
+      dateStr = dateStr.replace("\"", "");
+      table->setItem(table->rowCount() - 1, 0, new QTableWidgetItem(dateStr));
+      table->setItem(table->rowCount() - 1, 1, new QTableWidgetItem(lat));
+      table->setItem(table->rowCount() - 1, 2, new QTableWidgetItem(lon));
+      table->setItem(table->rowCount() - 1, 3, new QTableWidgetItem(lock));
+      table->setItem(table->rowCount() - 1, 4, new QTableWidgetItem(sig));
+      table->setItem(table->rowCount() - 1, 5, new QTableWidgetItem(snr));
+
+      r++;
+    }
+    fclose(f);
+  }
 }
 
 TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
@@ -142,54 +189,7 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   this->max_found_sig = 0.00452931;
   this->min_found_sig = 0.00385977;
 
-  // oooops
-
-  FILE *f = fopen("/home/sergey/dvb_drive.csv", "r");
-  QTableWidget *table = ui->tablePoints;
-
-  int r = 0;
-  while (!feof(f)) {
-    char buf[200];
-    memset(buf, 0, sizeof(buf));
-    fgets(buf, 200, f);
-    QString b = QString::fromLocal8Bit(buf);
-    QStringList lst = b.split(";");
-    if (lst.size() < 6)
-      continue;
-    QString dateStr = lst[0];
-    QString lat = lst[1];
-    QString lon = lst[2];
-    QString lock = lst[3];
-    QString sig = lst[4];
-    QString snr = lst[5];
-    sig = sig.replace(",", ".");
-    snr = snr.replace(",", ".");
-    double Snr = snr.toDouble();
-    double Sig = sig.toDouble();
-
-    Sig = 1 / fabs(Sig);
-    if (max_found_sig < Sig)
-      max_found_sig = Sig;
-    if (min_found_sig > Sig)
-      min_found_sig = Sig;
-
-    if (max_found_snr < Snr)
-      max_found_snr = Snr;
-    if (Snr != -1 && min_found_snr > Snr)
-      min_found_snr = Snr;
-
-    table->insertRow(r);
-    dateStr = dateStr.replace("\"", "");
-    table->setItem(table->rowCount() - 1, 0, new QTableWidgetItem(dateStr));
-    table->setItem(table->rowCount() - 1, 1, new QTableWidgetItem(lat));
-    table->setItem(table->rowCount() - 1, 2, new QTableWidgetItem(lon));
-    table->setItem(table->rowCount() - 1, 3, new QTableWidgetItem(lock));
-    table->setItem(table->rowCount() - 1, 4, new QTableWidgetItem(sig));
-    table->setItem(table->rowCount() - 1, 5, new QTableWidgetItem(snr));
-
-    r++;
-  }
-  fclose(f);
+  LoadGPSPoints();
 
   qDebug() << "min_found_snr = " << min_found_snr << "\n";
   qDebug() << "max_found_snr = " << max_found_snr << "\n";
