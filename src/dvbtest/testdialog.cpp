@@ -8,13 +8,6 @@
 #include <QMutex>
 #include <QThread>
 
-#include <dvb/dvbbackenddevice.h>
-#include <dvb/dvbconfig.h>
-#include <dvb/dvbdevice.h>
-#include <dvb/dvbliveview.h>
-#include <dvb/dvbscan.h>
-#include <dvb/dvbtransponder.h>
-
 #include "dvbtest/rtlfetcherthread.h"
 #include <iostream>
 #include <stdio.h>
@@ -120,6 +113,98 @@ QString TestDialog::DetectDVBCard(DvbDevice **device) {
   return card;
 }
 
+bool TestDialog::TuneToTranspId(int id_transp) {
+
+  QTableWidget *table = ui->tableTranspondersList;
+
+  if (id_transp < 0) {
+    QMessageBox::warning(this, "Scan", "Please select a transponder", 0, 0);
+    return false;
+  }
+
+  stopped_analize = false;
+
+  QString card = this->DetectDVBCard(&device);
+  ui->labelCard->setText(card);
+
+  if (!device) {
+    qDebug() << "No device!";
+    return false;
+  }
+
+  // tune to a transponder
+  transpRaw = new DvbT2Transponder();
+  memset(transpRaw, 0, sizeof(DvbT2Transponder));
+  if (is_fast_lock) {
+    transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
+  } else {
+    transpRaw->bandwidth = DvbT2Transponder::Bandwidth8MHz;
+  };
+  QString mod = table->item(id_transp, 3)->text().toLower();
+  transpRaw->modulation = DvbT2Transponder::ModulationAuto;
+  if (mod == "qam256")
+    transpRaw->modulation = DvbT2Transponder::Qam256;
+  if (mod == "qam16")
+    transpRaw->modulation = DvbT2Transponder::Qam16;
+  if (mod == "qam64")
+    transpRaw->modulation = DvbT2Transponder::Qam64;
+  if (mod == "Qpsk")
+    transpRaw->modulation = DvbT2Transponder::Qpsk;
+
+  QString fec = table->item(id_transp, 1)->text().toLower();
+  transpRaw->fecRateHigh = DvbT2Transponder::FecAuto;
+  if (fec == "1/2")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_2;
+  if (fec == "1/3")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_3;
+  if (fec == "1/4")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_4;
+  if (fec == "2/3")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec2_3;
+  if (fec == "2/5")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec2_5;
+  if (fec == "3/4")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec3_4;
+  if (fec == "3/5")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec3_5;
+  if (fec == "4/5")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec4_5;
+  if (fec == "5/6")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec5_6;
+  if (fec == "6/7")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec6_7;
+  if (fec == "7/8")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec7_8;
+  if (fec == "8/9")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec8_9;
+  if (fec == "9/10")
+    transpRaw->fecRateHigh = DvbT2Transponder::Fec9_10;
+
+  transpRaw->fecRateLow = DvbT2Transponder::FecNone;
+  transpRaw->guardInterval = DvbT2Transponder::GuardIntervalAuto;
+
+  QString tm = table->item(id_transp, 2)->text().toLower();
+  transpRaw->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
+  if (tm == "1k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode1k;
+  if (tm == "2k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode2k;
+  if (tm == "4k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode4k;
+  if (tm == "8k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode8k;
+  if (tm == "16k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode16k;
+  if (tm == "32k")
+    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode32k;
+
+  transpRaw->frequency = table->item(id_transp, 0)->text().toDouble() * 1000000;
+  transpRepr = transponder.fromString(transpRaw->toString());
+  device->tune(transpRepr);
+
+  return true;
+}
+
 void TestDialog::LoadGPSPoints() {
   const QString fileName = QDir::home().absolutePath() + "/dvb_drive.csv";
   if (QFile::exists(fileName)) {
@@ -173,7 +258,8 @@ void TestDialog::LoadGPSPoints() {
 }
 
 TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
-    : QDialog(parent), ui(new Ui::TestDialog) {
+    : QDialog(parent), ui(new Ui::TestDialog),
+      transponder(DvbTransponderBase::DvbT2) {
   ui->setupUi(this);
   this->is_fast_lock = false;
 
@@ -546,105 +632,17 @@ void TestDialog::on_buttonStartLocking_clicked() {
   QTableWidget *table = ui->tableTranspondersList;
   int row = table->currentRow();
 
-  if (row < 0) {
-    QMessageBox::warning(this, "Scan", "Please select a transponder", 0, 0);
-    return;
-  }
+  this->TuneToTranspId(row);
 
-  stopped_analize = false;
-
-  DvbDevice *device;
-  QString card = this->DetectDVBCard(&device);
-  ui->labelCard->setText(card);
-
-  if (!device) {
-    qDebug() << "No device!";
-    return;
-  }
-
-  DvbBackendDevice::Scale s;
-
-  // tune to a transponder
-  DvbT2Transponder *transpRaw = new DvbT2Transponder();
-  memset(transpRaw, 0, sizeof(DvbT2Transponder));
-  if (is_fast_lock) {
-    transpRaw->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
-  } else {
-    transpRaw->bandwidth = DvbT2Transponder::Bandwidth8MHz;
-  };
-  QString mod = table->item(row, 3)->text().toLower();
-  transpRaw->modulation = DvbT2Transponder::ModulationAuto;
-  if (mod == "qam256")
-    transpRaw->modulation = DvbT2Transponder::Qam256;
-  if (mod == "qam16")
-    transpRaw->modulation = DvbT2Transponder::Qam16;
-  if (mod == "qam64")
-    transpRaw->modulation = DvbT2Transponder::Qam64;
-  if (mod == "Qpsk")
-    transpRaw->modulation = DvbT2Transponder::Qpsk;
-
-  QString fec = table->item(row, 1)->text().toLower();
-  transpRaw->fecRateHigh = DvbT2Transponder::FecAuto;
-  if (fec == "1/2")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_2;
-  if (fec == "1/3")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_3;
-  if (fec == "1/4")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec1_4;
-  if (fec == "2/3")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec2_3;
-  if (fec == "2/5")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec2_5;
-  if (fec == "3/4")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec3_4;
-  if (fec == "3/5")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec3_5;
-  if (fec == "4/5")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec4_5;
-  if (fec == "5/6")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec5_6;
-  if (fec == "6/7")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec6_7;
-  if (fec == "7/8")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec7_8;
-  if (fec == "8/9")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec8_9;
-  if (fec == "9/10")
-    transpRaw->fecRateHigh = DvbT2Transponder::Fec9_10;
-
-  transpRaw->fecRateLow = DvbT2Transponder::FecNone;
-  transpRaw->guardInterval = DvbT2Transponder::GuardIntervalAuto;
-
-  QString tm = table->item(row, 2)->text().toLower();
-  transpRaw->transmissionMode = DvbT2Transponder::TransmissionModeAuto;
-  if (tm == "1k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode1k;
-  if (tm == "2k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode2k;
-  if (tm == "4k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode4k;
-  if (tm == "8k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode8k;
-  if (tm == "16k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode16k;
-  if (tm == "32k")
-    transpRaw->transmissionMode = DvbT2Transponder::TransmissionMode32k;
-
-  DvbTransponder transponder(DvbTransponderBase::DvbT2);
-  DvbTransponder transpRepr;
-
-  transpRaw->frequency = table->item(row, 0)->text().toDouble() * 1000000;
-  transpRepr = transponder.fromString(transpRaw->toString());
-  device->tune(transpRepr);
   int timer_no_signal = 0;
   const int pause_ms = 100;
 
   while (!stopped_analize) {
     // obtain values
-    float sig = device->getSignal(s);
+    float sig = device->getSignal(scale);
 
     QString sig_str = QString::number(sig, 'g', 4);
-    switch (s) {
+    switch (scale) {
     case DvbBackendDevice::NotSupported:
       sig_str += " pts";
       break;
@@ -662,10 +660,10 @@ void TestDialog::on_buttonStartLocking_clicked() {
     float sig2 = 1 / sig;
     if (sig == 100)
       sig2 = 0;
-    float snr = device->getSnr(s);
+    float snr = device->getSnr(scale);
 
     QString snr_str = QString::number(snr, 'g', 4);
-    switch (s) {
+    switch (scale) {
     case DvbBackendDevice::NotSupported:
       snr_str += " pts";
       break;
@@ -833,3 +831,19 @@ void TestDialog::on_comboBoxConstellRefStream_activated(
 }
 
 void TestDialog::on_pushButtonClear_clicked() {}
+
+void TestDialog::on_pushButtonStartPID_clicked() {
+
+  int trans_id = ui->comboBoxFreqPID->currentIndex();
+  if (!this->TuneToTranspId(trans_id))
+    return;
+
+  // run
+
+  for (int i = 0; i < 100; i++) {
+    if (stopped_analize)
+      break;
+  }
+
+  device->release();
+}

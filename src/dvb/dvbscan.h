@@ -34,118 +34,110 @@ class DvbScanFilter;
 class DvbSdtEntry;
 class DvbSdtSection;
 
-class DvbPreviewChannel : public DvbChannel
-{
+class DvbPreviewChannel : public DvbChannel {
 public:
-	DvbPreviewChannel() : snr(-1) { }
-	~DvbPreviewChannel() { }
+  DvbPreviewChannel() : snr(-1) {}
+  ~DvbPreviewChannel() {}
 
-	/*
-	 * assigned when reading PMT
-	 */
+  /*
+   * assigned when reading PMT
+   */
 
-	// QString source;
-	// DvbTransponder transponder;
-	// int transportStreamId;
-	// int pmtPid;
-	// QByteArray pmtSectionData;
-	// int serviceId;
-	// int audioPid; // may be -1 (not present)
-	// bool hasVideo;
+  // QString source;
+  // DvbTransponder transponder;
+  // int transportStreamId;
+  // int pmtPid;
+  // QByteArray pmtSectionData;
+  // int serviceId;
+  // int audioPid; // may be -1 (not present)
+  // bool hasVideo;
 
-	QString snr;
+  QString snr;
 
-	/*
-	 * assigned when reading SDT
-	 */
+  /*
+   * assigned when reading SDT
+   */
 
-	// QString name;
-	// int networkId; // may be -1 (not present); ATSC meaning: source id
-	// bool isScrambled;
-	QString provider;
+  // QString name;
+  // int networkId; // may be -1 (not present); ATSC meaning: source id
+  // bool isScrambled;
+  QString provider;
 
-	/*
-	 * assigned when adding channel to the main list
-	 */
+  /*
+   * assigned when adding channel to the main list
+   */
 
-	// int number;
+  // int number;
 };
 
-class DvbScan : public QObject
-{
-	friend class DvbScanFilter;
-	Q_OBJECT
+class DvbScan : public QObject {
+  friend class DvbScanFilter;
+  Q_OBJECT
 public:
-	DvbScan(DvbDevice *device_, const QString &source_, const DvbTransponder &transponder_, bool useOtherNit);
-	DvbScan(DvbDevice *device_, const QString &source_,
-		const QList<DvbTransponder> &transponders_, bool useOtherNit);
-	DvbScan(DvbDevice *device_, const QString &source_, const QString &autoScanSource, bool useOtherNit);
-	~DvbScan();
+  DvbScan(DvbDevice *device_, const QString &source_,
+          const DvbTransponder &transponder_, bool useOtherNit);
+  DvbScan(DvbDevice *device_, const QString &source_,
+          const QList<DvbTransponder> &transponders_, bool useOtherNit);
+  DvbScan(DvbDevice *device_, const QString &source_,
+          const QString &autoScanSource, bool useOtherNit);
+  ~DvbScan();
 
-	void start();
+  void start();
 
 signals:
-	void foundChannels(const QList<DvbPreviewChannel> &channels);
-	void scanProgress(int percentage);
-	void scanFinished();
+  void foundChannels(const QList<DvbPreviewChannel> &channels);
+  void scanProgress(int percentage);
+  void scanFinished();
 
 private slots:
-	void deviceStateChanged();
+  void deviceStateChanged();
 
 private:
-	enum FilterType
-	{
-		PatFilter,
-		PmtFilter,
-		SdtFilter,
-		VctFilter,
-		NitFilter
-	};
+  enum FilterType {
+    PatFilter,
+    PmtFilter,
+    SdtFilter,
+    VctFilter,
+    NitFilter,
+    OtherFilter
+  };
 
-	enum State
-	{
-		ScanPat,
-		ScanNit,
-		ScanSdt,
-		ScanPmt,
-		ScanTune,
-		ScanTuning
-	};
+  enum State { ScanPat, ScanNit, ScanSdt, ScanPmt, ScanTune, ScanTuning };
 
-	bool startFilter(int pid, FilterType type);
-	void updateState();
+  bool startFilter(int pid, FilterType type);
+  void updateState();
 
-	void processPat(const DvbPatSection &section);
-	void processPmt(const DvbPmtSection &section, int pid);
-	void processSdt(const DvbSdtSection &section);
-	void processVct(const AtscVctSection &section);
-	void processNit(const DvbNitSection &section);
-	void processNitDescriptor(const DvbDescriptor &descriptor);
-	void filterFinished(DvbScanFilter *filter);
+  void processPat(const DvbPatSection &section);
+  void processPmt(const DvbPmtSection &section, int pid);
+  void processSdt(const DvbSdtSection &section);
+  void processVct(const AtscVctSection &section);
+  void processNit(const DvbNitSection &section);
+  void processNitDescriptor(const DvbDescriptor &descriptor);
+  void filterFinished(DvbScanFilter *filter);
 
-	DvbDevice *device;
-	QString source;
-	DvbTransponder transponder;
-	bool isLive;
-	bool isAuto;
-	bool useOtherNit;
+  DvbDevice *device;
+  QString source;
+  DvbTransponder transponder;
+  bool isLive;
+  bool isAuto;
+  bool useOtherNit;
 
-	// only used if isLive is false
-	QList<DvbTransponder> transponders;
-	int transponderIndex;
+  // only used if isLive is false
+  QList<DvbTransponder> transponders;
+  int transponderIndex;
 
-	State state;
-	QList<DvbPatEntry> patEntries;
-	int patIndex;
-	QList<DvbSdtEntry> sdtEntries;
-	QList<DvbPreviewChannel> channels;
+  State state;
+  QList<DvbPatEntry> patEntries;
+  int patIndex;
+  QList<DvbSdtEntry> sdtEntries;
+  QList<DvbPreviewChannel> channels;
 
-	DvbBackendDevice::Scale scale;
-	float snr;
-	int transportStreamId;
+  DvbBackendDevice::Scale scale;
+  float snr;
+  int transportStreamId;
 
-	QList<DvbScanFilter *> filters;
-	int activeFilters;
+  QList<DvbScanFilter *> filters;
+  int activeFilters;
 };
 
 #endif /* DVBSCAN_H */

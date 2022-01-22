@@ -6,7 +6,12 @@
 #include <QLabel>
 #include <QMutex>
 #include <dvb/dvbbackenddevice.h>
+#include <dvb/dvbconfig.h>
+#include <dvb/dvbdevice.h>
+#include <dvb/dvbliveview.h>
 #include <dvb/dvbmanager.h>
+#include <dvb/dvbscan.h>
+#include <dvb/dvbtransponder.h>
 
 namespace Ui {
 class TestDialog;
@@ -53,13 +58,23 @@ private slots:
 
   void on_pushButtonClear_clicked();
 
+  void on_pushButtonStartPID_clicked();
+
 private:
   void LoadGPSPoints();
   void SaveGPSPoints();
   bool gps_table_changed;
   QString DetectDVBCard(DvbDevice **device);
+  bool TuneToTranspId(int id_transp);
 
   Ui::TestDialog *ui;
+
+  DvbTransponder transpRepr;
+  DvbDevice *device;
+  DvbBackendDevice::Scale scale;
+  DvbT2Transponder *transpRaw;
+  DvbTransponder transponder;
+
   DvbManager *manager;
   int num_graphs;
   double max_found_sig;
