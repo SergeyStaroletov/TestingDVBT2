@@ -9,10 +9,15 @@
 #include <QThread>
 
 #include "dvbtest/rtlfetcherthread.h"
+
+#include "dvbtest/pidscan.h"
+
 #include <iostream>
 #include <stdio.h>
 
-static bool stopped_analize = false;
+bool stopped_analize = false;
+
+extern QMap<int, int> dvb_stat; // data on pid -> len
 
 bool is_group;
 
@@ -832,18 +837,48 @@ void TestDialog::on_comboBoxConstellRefStream_activated(
 
 void TestDialog::on_pushButtonClear_clicked() {}
 
+class PidScanTh : public QThread {
+private:
+  PidScan *ps;
+
+public:
+  PidScanTh(PidScan *ps) : ps(ps) {}
+  void run() { ps->start(); }
+};
+
 void TestDialog::on_pushButtonStartPID_clicked() {
 
   int trans_id = ui->comboBoxFreqPID->currentIndex();
   if (!this->TuneToTranspId(trans_id))
     return;
 
-  // run
+  QThread::currentThread()->msleep(7000);
 
-  for (int i = 0; i < 100; i++) {
+  // run pidscan
+
+  PidScan *scan = new PidScan(device, "", transponder, false);
+  PidScanTh *scant = new PidScanTh(scan);
+
+  scant->start();
+
+  // for (int i = 0; i < 10; i++) {
+  while (true) {
     if (stopped_analize)
       break;
-  }
+    QApplication::processEvents();
 
-  device->release();
+    QThread::msleep(1000);
+
+    qDebug() << "-----------------";
+
+    for (auto k : dvb_stat.keys()) {
+      auto v = dvb_stat.value(k);
+      qDebug() << "[stat] pid = " << k << " len = " << v;
+    }
+
+    qDebug() << "-----------------";
+  }
+  stopped_analize = true;
+
+  // device->release();
 }

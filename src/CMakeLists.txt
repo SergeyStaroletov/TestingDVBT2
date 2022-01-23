@@ -106,6 +106,8 @@ if(HAVE_DVB)
       dvbtest/testdialog.h
       dvbtest/testdialog.cpp
       dvbtest/testdialog.ui
+      dvbtest/pidscan.cpp
+      dvbtest/pidscan.h
       dvbtest/omap/core/opmaps.cpp
       dvbtest/omap/core/providerstrings.cpp
       dvbtest/omap/core/rawtile.cpp

@@ -22,6 +22,7 @@
 #define DVBSCAN_H
 
 #include "dvbchannel.h"
+#include <dvb/dvbbackenddevice.h>
 
 class AtscVctSection;
 class DvbDescriptor;
@@ -84,15 +85,6 @@ public:
 
   void start();
 
-signals:
-  void foundChannels(const QList<DvbPreviewChannel> &channels);
-  void scanProgress(int percentage);
-  void scanFinished();
-
-private slots:
-  void deviceStateChanged();
-
-private:
   enum FilterType {
     PatFilter,
     PmtFilter,
@@ -102,6 +94,15 @@ private:
     OtherFilter
   };
 
+signals:
+  void foundChannels(const QList<DvbPreviewChannel> &channels);
+  void scanProgress(int percentage);
+  void scanFinished();
+
+private slots:
+  void deviceStateChanged();
+
+private:
   enum State { ScanPat, ScanNit, ScanSdt, ScanPmt, ScanTune, ScanTuning };
 
   bool startFilter(int pid, FilterType type);
