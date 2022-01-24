@@ -308,7 +308,7 @@ PidScan::~PidScan() { qDeleteAll(filters); }
 
 void PidScan::start() {
   connect(device, SIGNAL(stateChanged()), this, SLOT(deviceStateChanged()));
-  while (true) {
+  while (!stopped_analize) {
     updateState();
     QThread::currentThread()->msleep(1000);
   }

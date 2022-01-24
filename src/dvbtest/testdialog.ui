@@ -58,7 +58,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -595,6 +595,32 @@
      </property>
      <property name="text">
       <string>Start</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonStopPID">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>15</y>
+       <width>89</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Stop</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxSaveTS">
+     <property name="geometry">
+      <rect>
+       <x>390</x>
+       <y>15</y>
+       <width>281</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>save collected streams to /home</string>
      </property>
     </widget>
    </widget>

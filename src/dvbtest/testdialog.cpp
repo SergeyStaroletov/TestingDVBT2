@@ -1,6 +1,5 @@
 #include "testdialog.h"
 #include "glwidget.h"
-#include "qcustomplot.h"
 #include "ui_testdialog.h"
 #include "window.h"
 #include <KLocalizedString>
@@ -18,6 +17,10 @@
 bool stopped_analize = false;
 
 extern QMap<int, int> dvb_stat; // data on pid -> len
+QMap<int, QVector<char>> dvb_char_data;
+
+bool should_collect_data = false;
+bool should_save_data = false;
 
 bool is_group;
 
@@ -277,6 +280,7 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
   this->max_found_snr = -1;
   this->min_found_snr = 32768;
 
+  // todo: check the name of dvb card in order to use these consts
   this->max_found_sig = 0.00452931;
   this->min_found_sig = 0.00385977;
 
@@ -317,7 +321,8 @@ TestDialog::TestDialog(QWidget *parent, DvbManager *manager)
 TestDialog::~TestDialog() { delete ui; }
 
 void TestDialog::on_pushButton_clicked() {
-  //
+  // the code to remove and rewrite to the gps tab
+
   DvbDevice *device;
   this->DetectDVBCard(&device);
 
@@ -328,44 +333,6 @@ void TestDialog::on_pushButton_clicked() {
   qDebug() << device->getDeviceId();
   DvbBackendDevice::Scale s;
   QString src = "Terrestrial (T2)";
-
-  /*
-      for (int f = 70000000; f < 110000000;f+=1000000) {
-
-      DvbT2Transponder *t = new DvbT2Transponder();
-      memset(t, 0, sizeof(DvbT2Transponder));
-      t->bandwidth = DvbT2Transponder::Bandwidth1_7MHz;
-      t->frequency = f;//522000000;
-      t->modulation = DvbT2Transponder::ModulationAuto;
-      t->fecRateHigh = DvbT2Transponder::FecAuto;
-      t->fecRateLow = DvbT2Transponder::FecNone;
-      t->guardInterval = DvbT2Transponder::GuardIntervalAuto;
-      t->modulation = DvbT2Transponder::ModulationAuto;
-      t->transmissionMode=DvbT2Transponder::TransmissionModeAuto;
-
-      //qDebug() << t->toString();
-
-      DvbTransponder transponder(DvbTransponderBase::DvbT2);
-
-      DvbTransponder tt = transponder.fromString(t->toString());
-
-      delete t;
-
-      //qDebug() << tt.toString();
-
-
-      device->tune(tt);
-      float sig = 1/device->getSignal(s);
-      float snr = device->getSnr(s);
-      float ff = f / 1000000;
-      std::cout << ff << ";" << sig << ";" << snr << "\n";
-      fflush(stdout);
-
-      }
-
-
-      return;
-  */
 
   DvbT2Transponder *t = new DvbT2Transponder();
   memset(t, 0, sizeof(DvbT2Transponder));
@@ -765,9 +732,11 @@ void TestDialog::on_tabWidget_currentChanged(int index) {
   stopped_analize = true;
   // update transponders
   ui->comboBoxConstellFreq->clear();
+  ui->comboBoxFreqPID->clear();
   QTableWidget *table = ui->tableTranspondersList;
   for (int r = 0; r < table->rowCount(); r++) {
     ui->comboBoxConstellFreq->addItem(table->item(r, 0)->text());
+    ui->comboBoxFreqPID->addItem(table->item(r, 0)->text());
   }
 }
 
@@ -846,39 +815,177 @@ public:
   void run() { ps->start(); }
 };
 
+QColor colorByNumber(int gi) {
+  float max = 50.0;
+  QColor color(20 + 200 / max * gi, 70 * (1.6 - gi / max), 150, 150);
+  return color;
+}
+
 void TestDialog::on_pushButtonStartPID_clicked() {
+
+  QVector<double> nv;
+
+  for (auto b : bars) {
+    b->setData(nv, nv);
+  }
+
+  bars.clear();
 
   int trans_id = ui->comboBoxFreqPID->currentIndex();
   if (!this->TuneToTranspId(trans_id))
     return;
 
-  QThread::currentThread()->msleep(7000);
+  int max_steps = 100;
+  int max_bit_rate = 4000;
+
+  // prepare plot
+  QCustomPlot *customPlot = ui->plotPID;
+
+  customPlot->clearItems();
+  customPlot->clearGraphs();
+
+  customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedKingdom));
+  // set a more compact font size for bottom and left axis tick labels:
+  customPlot->xAxis->setTickLabelFont(QFont(QFont().family(), 8));
+  customPlot->yAxis->setTickLabelFont(QFont(QFont().family(), 8));
+  // set axis labels:
+  customPlot->xAxis->setLabel("Step");
+  customPlot->yAxis->setLabel("Bitrate (MB/s)");
+  // make top and right axes visible but without ticks and labels:
+  customPlot->xAxis2->setVisible(true);
+  customPlot->yAxis2->setVisible(true);
+  customPlot->xAxis2->setTicks(false);
+  customPlot->yAxis2->setTicks(false);
+  customPlot->xAxis2->setTickLabels(false);
+  customPlot->yAxis2->setTickLabels(false);
+  // set axis ranges to show all data:
+  customPlot->xAxis->setRange(0, max_steps);
+  customPlot->yAxis->setRange(0, max_bit_rate);
+  // show legend with slightly transparent background brush:
+  customPlot->legend->setVisible(true);
+  customPlot->legend->setWrap(15);
+  customPlot->legend->clearItems();
+
+  QFont fnt = customPlot->legend->font();
+  fnt.setPointSize(8);
+  customPlot->legend->setFont(fnt);
+  customPlot->legend->setBrush(QColor(255, 255, 255, 150));
+
+  ui->plot->axisRect()->setupFullAxesBox(true);
+  ui->plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
   // run pidscan
 
   PidScan *scan = new PidScan(device, "", transponder, false);
   PidScanTh *scant = new PidScanTh(scan);
 
+  should_collect_data = true;
+  should_save_data = ui->checkBoxSaveTS->isChecked();
+
   scant->start();
 
-  // for (int i = 0; i < 10; i++) {
+  int pids_count = 0;
+  QVector<double> ticks;
+  QVector<QVector<double>> plot_data;
+  QVector<int> all_PIDs;
+
+  int s = 0;
+
+  const int sleep_interval = 1000;
+
   while (true) {
     if (stopped_analize)
       break;
     QApplication::processEvents();
+    QThread::msleep(sleep_interval);
 
-    QThread::msleep(1000);
-
-    qDebug() << "-----------------";
-
-    for (auto k : dvb_stat.keys()) {
-      auto v = dvb_stat.value(k);
-      qDebug() << "[stat] pid = " << k << " len = " << v;
+    if (s == max_steps) {
+      s = 0;
+      ticks.clear();
+      plot_data.clear();
+      plot_data.resize(pids_count);
     }
 
-    qDebug() << "-----------------";
-  }
-  stopped_analize = true;
+    ticks.push_back(s);
 
-  // device->release();
+    qDebug() << "-----------------";
+
+    QVector<int> all_new_PIDs;
+
+    // check for new pids
+    int sum = 0;
+    for (auto k : dvb_stat.keys()) {
+      if (!all_PIDs.contains(k))
+        all_new_PIDs.push_back(k);
+      auto v = dvb_stat.value(k);
+      sum += v;
+      qDebug() << "[stat] pid = " << k << " len = " << v;
+    }
+    qDebug() << "bitrate: " << sum;
+    qDebug() << "-----------------";
+
+    // add new pids
+    for (auto pid : all_new_PIDs) {
+      QCPBars *bar = new QCPBars(customPlot->xAxis, customPlot->yAxis);
+      bar->setName("pid " + QString::number(pid));
+      bar->setAntialiased(false);
+      // bar->setStackingGap(1);
+      bar->setPen(QPen(colorByNumber(pids_count).lighter(200)));
+      bar->setBrush(colorByNumber(pids_count));
+      if (pids_count != 0)
+        bar->moveAbove(bars[pids_count - 1]);
+
+      bars.push_back(bar);
+
+      pids_count++;
+      plot_data.resize(pids_count);
+      plot_data[pids_count - 1].resize(s);
+      plot_data[pids_count - 1].fill(0); // in the past, it was 0
+      all_PIDs.append(pid);
+    }
+
+    // copy data to graph
+    for (int i = 0; i < pids_count; i++) {
+      plot_data[i].resize(s + 1);
+      int pid = all_PIDs[i];
+
+      plot_data[i][s] = dvb_stat.value(pid) / sleep_interval;
+    }
+
+    // clear data
+    should_collect_data = false;
+    for (auto k : dvb_stat.keys()) {
+      dvb_stat[k] = 0;
+    }
+    for (auto k : dvb_stat.keys()) {
+      dvb_stat[k] = 0;
+    }
+    should_collect_data = true;
+
+    for (int i = 0; i < pids_count; i++) {
+      bars[i]->setData(ticks, plot_data[i]);
+    }
+
+    QApplication::processEvents();
+    customPlot->replot();
+
+    s++;
+  }
+
+  should_collect_data = false;
+  should_save_data = false;
+
+  device->release();
+
+  // save all we collect if we want it
+  if (ui->checkBoxSaveTS->isChecked())
+    for (auto k : dvb_char_data.keys()) {
+      auto v = dvb_char_data.value(k);
+      QString fname = QDir::homePath() + "/pid_" + QString::number(k) + ".dvb";
+      FILE *f = fopen(fname.toLocal8Bit(), "w");
+      fwrite(v.constData(), v.size(), 1, f);
+      fclose(f);
+    }
 }
+
+void TestDialog::on_pushButtonStopPID_clicked() { stopped_analize = true; }

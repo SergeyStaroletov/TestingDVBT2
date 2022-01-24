@@ -2,6 +2,7 @@
 #define TESTDIALOG_H
 
 #include "glwidget.h"
+#include "qcustomplot.h"
 #include <QDialog>
 #include <QLabel>
 #include <QMutex>
@@ -60,6 +61,8 @@ private slots:
 
   void on_pushButtonStartPID_clicked();
 
+  void on_pushButtonStopPID_clicked();
+
 private:
   void LoadGPSPoints();
   void SaveGPSPoints();
@@ -87,6 +90,7 @@ private:
   QMutex sem_buffer;
   GLWidget *glWidget;
   std::vector<unsigned char> iq_data;
+  QVector<QCPBars *> bars;
 };
 
 class DvbGradProgress2 : public QLabel {

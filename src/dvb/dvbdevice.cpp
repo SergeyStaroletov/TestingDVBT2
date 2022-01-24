@@ -39,6 +39,8 @@
 
 extern QMap<int, int> dvb_stat;
 extern QMap<int, QVector<char>> dvb_char_data;
+extern bool should_collect_data;
+extern bool should_save_data;
 
 class DvbFilterInternal {
 public:
@@ -969,9 +971,11 @@ void DvbDevice::customEvent(QEvent *) {
                  static_cast<unsigned char>(packet[2])) &
                 ((1 << 13) - 1);
       //
-      dvb_stat[pid] += 188;
-      for (int j = 4; j < 188; j++)
-        dvb_char_data[pid].push_back(packet[j]);
+      if (should_collect_data)
+        dvb_stat[pid] += 188;
+      if (should_save_data)
+        for (int j = 4; j < 188; j++)
+          dvb_char_data[pid].push_back(packet[j]);
       //
 
       QMap<int, DvbFilterInternal>::const_iterator it = filters.constFind(pid);

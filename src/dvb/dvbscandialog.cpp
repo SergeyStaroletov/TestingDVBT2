@@ -44,7 +44,6 @@
 
 QMap<int, int> dvb_stat;
 QMap<int, QVector<QChar>> dvb_save;
-QMap<int, QVector<char>> dvb_char_data;
 
 DvbGradProgress::DvbGradProgress(QWidget *parent)
     : QLabel(parent), value(0), max(100.), min(0.) {
@@ -550,14 +549,6 @@ void DvbScanDialog::scanFinished() {
   for (auto k : dvb_stat.keys()) {
     auto v = dvb_stat.value(k);
     qDebug() << "[stat] pid = " << k << " len = " << v;
-  }
-
-  for (auto k : dvb_char_data.keys()) {
-    auto v = dvb_char_data.value(k);
-    QString fname = "/home/sergey/" + QString::number(k) + ".pid";
-    FILE *f = fopen(fname.toLocal8Bit(), "w");
-    fwrite(v.constData(), v.size(), 1, f);
-    fclose(f);
   }
 }
 
