@@ -10,11 +10,12 @@ Integrates:
 
 All libs are collected here and now can be built together using CMake. All my sources are here: <a href = "src/dvbtest">src/dvbtest</a>.
 
-License: GPL. 
+License: GPL. Not for professional use.
 
 It uses Kaffeine classes to work with signal level, transponders and a DVB card (tested only with Astrometa/Sony). 
 
 It can constantly show signal strench/quality, scan spectrum, draw a map with points and visualize constellations using OpenGL.
+Added the PIDs monitoring feature.
 
 !!Currently source state works only in a demo mode!!
 
@@ -28,6 +29,8 @@ Please wait for updates till feb 2022...
 <img src = "dvb2.png" width = "50%" />
 <img src = "dvb3.png" width = "50%"/>
 <img src = "dvb4.png" width = "50%"/>
+<img src = "dvb5.png" width = "50%"/>
+
 
 How to build
 =
