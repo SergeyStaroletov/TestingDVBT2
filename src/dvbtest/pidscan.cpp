@@ -346,7 +346,7 @@ bool PidScan::startFilter(int pid, DvbScan::FilterType type) {
     }
 
     Q_ASSERT(false);
-  } else if (activeFilters < 50) {
+  } else if (activeFilters < 55) {
     PidScanFilter *filter = new PidScanFilter(this, useOtherNit);
 
     if (!filter->startFilter(pid, type, 5000)) {

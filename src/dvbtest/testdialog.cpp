@@ -838,6 +838,7 @@ void TestDialog::on_pushButtonStartPID_clicked() {
   int max_steps = 100;
   int max_bit_rate = 4000;
 
+  int max_sum = 0;
   // prepare plot
   QCustomPlot *customPlot = ui->plotPID;
 
@@ -924,6 +925,10 @@ void TestDialog::on_pushButtonStartPID_clicked() {
     qDebug() << "bitrate: " << sum;
     qDebug() << "-----------------";
 
+    if (sum > max_sum) {
+      max_sum = sum;
+    }
+
     // add new pids
     for (auto pid : all_new_PIDs) {
       QCPBars *bar = new QCPBars(customPlot->xAxis, customPlot->yAxis);
@@ -967,6 +972,8 @@ void TestDialog::on_pushButtonStartPID_clicked() {
     }
 
     QApplication::processEvents();
+    ui->labelMaxSpeed->setText(QString::number(max_sum));
+    ui->labelCurrentSpeed->setText(QString::number(sum));
     customPlot->replot();
 
     s++;
