@@ -35,11 +35,7 @@ Please wait for updates till feb 2022...
 How to build
 =
 ```
-sudo apt install libudev-dev libkf5coreaddons-dev-bin libkf5coreaddons5 libvlc-dev gettext 
-libkf5dbusaddons-dev libkf5solid-dev libkf5kio-dev libkf5xmlgui-dev libkf5windowsystem-dev 
-libkf5i18n-dev libkf5coreaddons-dev libqt5opengl5-dev libqt5opengl5 
-libqt5x11extras5 libqt5x11extras5-dev libqt5svg5-dev qt5-image-formats-plugins 
-extra-cmake-modules
+sudo apt install libudev-dev libkf5coreaddons-dev-bin libkf5coreaddons5 libvlc-dev gettext libkf5dbusaddons-dev libkf5solid-dev libkf5kio-dev libkf5xmlgui-dev libkf5windowsystem-dev libkf5i18n-dev libkf5coreaddons-dev libqt5opengl5-dev libqt5opengl5 libqt5x11extras5 libqt5x11extras5-dev libqt5svg5-dev qt5-image-formats-plugins extra-cmake-modules
 ```
 Probably check CMakelists.
 Then use cmake 
