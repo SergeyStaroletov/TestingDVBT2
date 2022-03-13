@@ -21,7 +21,7 @@ Added the PIDs monitoring feature.
 
 Presented at TELFOR 2021. The paper on IEEE is <a href = "https://ieeexplore.ieee.org/document/9653329">here</a>.
 
-Please wait for updates till feb 2022...
+Please wait for some updates ...
 
 <img src = "dvb_card.jpg" width = "50%" />
 <img src = "dvb0.png" width = "50%" />
